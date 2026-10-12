@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Editar dispositivo | NOC Syslog Inteligente</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 850px;
+            margin: 35px auto;
+            padding: 0 18px;
+            background: #f3f6fa;
+            color: #1f2937;
+        }
+        h1 { color: #12345a; }
+        .panel {
+            background: white;
+            padding: 22px;
+            margin-bottom: 22px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #0000000d;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        input, select, textarea, button {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            font: inherit;
+        }
+        textarea { resize: vertical; }
+        button {
+            margin-top: 16px;
+            background: #155eab;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover { background: #104a88; }
+        .full { grid-column: 1 / -1; }
+        .messages {
+            padding: 12px;
+            border-radius: 5px;
+        }
+        .success { background: #dcfce7; color: #166534; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .back-link {
+            display: inline-block;
+            margin-top: 12px;
+            color: #155eab;
+        }
+        @media (max-width: 650px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .full { grid-column: auto; }
+        }
+    </style>
+</head>
+<body>
+    <h1>NOC Syslog Inteligente</h1>
+
+    <section class="panel">
+        <h2>Editar dispositivo #{{ device["id"] }}</h2>
+
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+            <div class="messages {{ category }}">{{ message }}</div>
+        {% endfor %}
+
+        <form method="post">
+            <div class="form-grid">
+                <div>
+                    <label for="name">Nombre *</label>
+                    <input id="name" name="name" required maxlength="100"
+                           value="{{ device['name'] }}">
+                </div>
+
+                <div>
+                    <label for="ip_address">Dirección IP *</label>
+                    <input id="ip_address" name="ip_address"
+                           required maxlength="45"
+                           value="{{ device['ip_address'] }}">
+                </div>
+
+                <div>
+                    <label for="manufacturer">Fabricante *</label>
+                    <select id="manufacturer" name="manufacturer" required>
+                        <option value="">Seleccionar</option>
+                        {% for option in ["Cisco", "Fortinet", "Huawei", "Otro"] %}
+                            <option value="{{ option }}"
+                                {% if device["manufacturer"] == option %}selected{% endif %}>
+                                {{ option }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="device_type">Tipo de dispositivo *</label>
+                    <select id="device_type" name="device_type" required>
+                        <option value="">Seleccionar</option>
+                        {% for option in [
+                            "Router", "Switch", "Firewall",
+                            "Servidor", "Access Point", "Otro"
+                        ] %}
+                            <option value="{{ option }}"
+                                {% if device["device_type"] == option %}selected{% endif %}>
+                                {{ option }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="status">Estado</label>
+                    <select id="status" name="status">
+                        <option value="activo"
+                            {% if device["status"] == "activo" %}selected{% endif %}>
+                            Activo
+                        </option>
+                        <option value="inactivo"
+                            {% if device["status"] == "inactivo" %}selected{% endif %}>
+                            Inactivo
+                        </option>
+                        <option value="mantenimiento"
+                            {% if device["status"] == "mantenimiento" %}selected{% endif %}>
+                            En mantenimiento
+                        </option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="location">Ubicación</label>
+                    <input id="location" name="location" maxlength="150"
+                           value="{{ device['location'] or '' }}">
+                </div>
+
+                <div class="full">
+                    <label for="notes">Notas</label>
+                    <textarea id="notes" name="notes" rows="4">{{ device["notes"] or "" }}</textarea>
+                </div>
+            </div>
+
+            <button type="submit">Guardar cambios</button>
+        </form>
+
+        <a class="back-link" href="{{ url_for('home') }}">
+            Volver al inventario sin guardar
+        </a>
+    </section>
+</body>
+</html>
