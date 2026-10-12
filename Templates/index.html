@@ -291,32 +291,67 @@
     </style>
 </head>
 <body>
-    <h1>NOC Syslog Inteligente</h1>
-    <p>MVP v0.2.0 | Inventario de dispositivos de red</p>
-
-
 {% if not request.args.get('embedded') %}
-<nav aria-label="Navegación de herramientas NOC"
-     style="display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:12px; margin:20px 0;">
+    <!-- Aquí va el menú completo -->
+{% endif %}
 
-    <a href="{{ url_for('home') }}"
+<div style="height:76px;"></div>
+
+<h1>NOC Syslog Inteligente</h1>
+<p>MVP v0.2.0 | Inventario de dispositivos de red</p>
+{% if not request.args.get('embedded') %}
+
+<nav aria-label="Navegación de herramientas NOC"
+     style="display:flex;
+            flex-direction:row;
+            flex-wrap:wrap;
+            align-items:center;
+            gap:12px;
+            margin:0;
+            padding:12px 20px;
+            position:fixed;
+            top:0;
+            left:0;
+            right:0;
+            z-index:1000;
+            background:#f1f5f9;
+            box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+
+    <a href="{{ url_for('home') }}" data-view="dashboard"
        style="display:inline-block; padding:12px 20px; background:#1e293b; color:white; text-decoration:none; border-radius:8px; white-space:nowrap;">
         Dashboard e inventario
     </a>
 
-    <a href="{{ url_for('consola_simulada') }}"
+    <a href="{{ url_for('consola_simulada') }}?embedded=1" data-view="externo"
        style="display:inline-block; padding:12px 20px; background:#2563eb; color:white; text-decoration:none; border-radius:8px; white-space:nowrap;">
         Consola simulada
     </a>
 
-    <a href="{{ url_for('configuraciones') }}"
+    <a href="{{ url_for('configuraciones') }}?embedded=1" data-view="externo"
        style="display:inline-block; padding:12px 20px; background:#0f766e; color:white; text-decoration:none; border-radius:8px; white-space:nowrap;">
         Configuraciones por fabricante
+    </a>
+
+    <a href="{{ url_for('politicas_ia') }}?embedded=1" data-view="externo"
+       style="display:inline-block; padding:12px 20px; background:#7c3aed; color:white; text-decoration:none; border-radius:8px; white-space:nowrap;">
+        Políticas de IA
     </a>
 
 </nav>
 {% endif %}
 
+<div id="contenido-externo"
+     style="display:none; width:100%;">
+
+    <iframe
+        id="visor-secciones"
+        title="Sección del sistema NOC"
+        style="width:100%; height:calc(100vh - 110px);
+               min-height:600px; border:0;
+               background:white; border-radius:10px;">
+    </iframe>
+
+</div>
 <div class="dashboard-layout">
 
     <aside class="dashboard-sidebar">
@@ -1018,6 +1053,31 @@ async function actualizarSeccion(url, secciones) {
             boton.disabled = false;
         }
     });
+
+// Navegación del menú superior sin abandonar la página.
+document.querySelectorAll(
+    'nav[aria-label="Navegación de herramientas NOC"] a[data-view]'
+).forEach(function (enlace) {
+
+    enlace.addEventListener("click", function (evento) {
+        evento.preventDefault();
+
+        const dashboard = document.querySelector(".dashboard-layout");
+        const contenido = document.getElementById("contenido-externo");
+        const visor = document.getElementById("visor-secciones");
+
+        if (enlace.dataset.view === "dashboard") {
+            contenido.style.display = "none";
+            dashboard.style.display = "";
+            visor.src = "about:blank";
+        } else {
+            dashboard.style.display = "none";
+            contenido.style.display = "block";
+            visor.src = enlace.href;
+        }
+    });
+});
+
 </script>
 </body>
 </html>
