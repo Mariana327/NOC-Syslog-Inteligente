@@ -95,10 +95,3 @@ El receptor utiliza el puerto UDP 5514, de acuerdo con la configuración del pro
 El proyecto utiliza SQLite para almacenar información persistente. La ruta configurada es `Data/noc_syslog.db`.
 
 Para una instalación nueva, verifica que la base de datos y sus tablas se inicialicen correctamente antes de utilizar la aplicación.
-
-
-## 9. Autoría
-
-Proyecto académico desarrollado como parte de la asignatura Administración y Gestión de Redes.
-
-**Versión documentada:** MVP v0.2.0
