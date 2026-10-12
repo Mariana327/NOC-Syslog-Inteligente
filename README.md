@@ -96,14 +96,8 @@ El proyecto utiliza SQLite para almacenar información persistente. La ruta conf
 
 Para una instalación nueva, verifica que la base de datos y sus tablas se inicialicen correctamente antes de utilizar la aplicación.
 
-## 9. Trabajo futuro
 
-- Incorporar análisis inteligente de eventos Syslog.
-- Mejorar la correlación entre eventos e incidentes.
-- Ampliar las pruebas funcionales.
-- Evaluar integraciones seguras con equipos de red reales.
-
-## 10. Autoría
+## 9. Autoría
 
 Proyecto académico desarrollado como parte de la asignatura Administración y Gestión de Redes.
 
