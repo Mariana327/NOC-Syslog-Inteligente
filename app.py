@@ -419,6 +419,70 @@ def configuraciones():
 def panel():
     return render_template("panel.html")
 
+@app.route("/politicas-ia")
+def politicas_ia():
+    politicas = [
+        {
+            "numero": 1,
+            "titulo": "Supervisión humana",
+            "descripcion": (
+                "Las recomendaciones generadas por inteligencia artificial "
+                "deben ser evaluadas por el administrador de red antes de "
+                "tomar decisiones que puedan afectar la infraestructura."
+            ),
+        },
+        {
+            "numero": 2,
+            "titulo": "Protección de datos",
+            "descripcion": (
+                "Se debe evitar la exposición de contraseñas, claves de "
+                "acceso, tokens y otra información sensible durante el "
+                "procesamiento de eventos y el uso de herramientas de IA."
+            ),
+        },
+        {
+            "numero": 3,
+            "titulo": "Autorización de acciones",
+            "descripcion": (
+                "La inteligencia artificial no debe ejecutar cambios en "
+                "la configuración de los dispositivos de red sin la "
+                "autorización explícita de un usuario autorizado."
+            ),
+        },
+        {
+            "numero": 4,
+            "titulo": "Validación de resultados",
+            "descripcion": (
+                "Las alertas, clasificaciones y recomendaciones generadas "
+                "por IA son orientativas y deben contrastarse con los "
+                "registros disponibles en el sistema."
+            ),
+        },
+        {
+            "numero": 5,
+            "titulo": "Registro y trazabilidad",
+            "descripcion": (
+                "Se debe procurar conservar evidencia de las "
+                "recomendaciones generadas y de las decisiones tomadas "
+                "por los administradores."
+            ),
+        },
+        {
+            "numero": 6,
+            "titulo": "Uso responsable y transparencia",
+            "descripcion": (
+                "El sistema debe distinguir entre los eventos registrados, "
+                "las reglas de clasificación aplicadas y las recomendaciones "
+                "generadas por inteligencia artificial."
+            ),
+        },
+    ]
+
+    return render_template(
+        "politicas_ia.html",
+        politicas=politicas,
+    )
+
 if __name__ == "__main__":
     if not DATABASE_PATH.exists():
         raise FileNotFoundError(

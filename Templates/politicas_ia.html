@@ -1,0 +1,164 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Políticas de IA | NOC Syslog Inteligente</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        header {
+            background: #172554;
+            color: white;
+            padding: 25px 20px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+            font-size: 25px;
+        }
+
+        header p {
+            margin: 0;
+            color: #cbd5e1;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .introduccion {
+            background: white;
+            padding: 22px;
+            border-radius: 10px;
+            margin-bottom: 22px;
+            line-height: 1.6;
+        }
+
+        .politicas {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(270px, 1fr));
+            gap: 18px;
+        }
+
+        .politica {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 22px;
+            border-top: 4px solid #2563eb;
+        }
+
+        .numero {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 7px 11px;
+            border-radius: 7px;
+            font-weight: bold;
+        }
+
+        .politica h2 {
+            font-size: 19px;
+            margin: 16px 0 10px;
+        }
+
+        .politica p {
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 0;
+        }
+
+        .aviso {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            padding: 18px;
+            margin-top: 24px;
+            border-radius: 10px;
+            line-height: 1.6;
+        }
+
+        .volver {
+            display: inline-block;
+            margin-top: 24px;
+            background: #1d4ed8;
+            color: white;
+            text-decoration: none;
+            padding: 12px 18px;
+            border-radius: 7px;
+        }
+
+        .volver:hover {
+            background: #1e40af;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #64748b;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>NOC Syslog Inteligente</h1>
+        <p>Políticas de uso responsable de la inteligencia artificial</p>
+    </header>
+
+    <main>
+        <section class="introduccion">
+            <h2>Reglas y controles de seguridad</h2>
+            <p>
+                Consulta las políticas definidas para orientar el análisis
+                de eventos Syslog y el uso responsable de las
+                recomendaciones generadas por inteligencia artificial.
+            </p>
+        </section>
+
+        <section class="politicas">
+            {% for politica in politicas %}
+            <article class="politica">
+                <span class="numero">
+                    Política {{ politica.numero }}
+                </span>
+
+                <h2>{{ politica.titulo }}</h2>
+
+                <p>{{ politica.descripcion }}</p>
+            </article>
+            {% endfor %}
+        </section>
+
+        <section class="aviso">
+            <strong>Importante:</strong>
+            estas políticas son lineamientos definidos para el proyecto.
+            Su publicación en esta pantalla no significa que todos los
+            controles técnicos estén implementados o activos.
+        </section>
+
+        <a class="volver" href="{{ url_for('home') }}">
+            Volver al inicio
+        </a>
+    </main>
+
+    <footer>
+        NOC Syslog Inteligente · Políticas de IA
+    </footer>
+</body>
+</html>
