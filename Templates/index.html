@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NOC Syslog Inteligente | Inventario</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1100px;
+            margin: 35px auto;
+            padding: 0 18px;
+            background: #f3f6fa;
+            color: #1f2937;
+        }
+        h1 { color: #12345a; }
+        .panel {
+            background: white;
+            padding: 22px;
+            margin-bottom: 22px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #0000000d;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+        label { display: block; font-weight: bold; margin-bottom: 6px; }
+        input, select, textarea, button {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            font: inherit;
+        }
+        textarea { resize: vertical; }
+        button {
+            margin-top: 16px;
+            background: #155eab;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover { background: #104a88; }
+        .full { grid-column: 1 / -1; }
+        .messages { padding: 12px; border-radius: 5px; }
+        .success { background: #dcfce7; color: #166534; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th { background: #eaf0f8; }
+        .empty { color: #64748b; }
+        @media (max-width: 650px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .full { grid-column: auto; }
+        }
+    </style>
+</head>
+<body>
+    <h1>NOC Syslog Inteligente</h1>
+    <p>MVP v0.2.0 | Inventario de dispositivos de red</p>
+
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+        <div class="panel messages {{ category }}">{{ message }}</div>
+    {% endfor %}
+
+    <section class="panel">
+        <h2>Registrar dispositivo</h2>
+        <form action="{{ url_for('create_device') }}" method="post">
+            <div class="form-grid">
+                <div>
+                    <label for="name">Nombre *</label>
+                    <input id="name" name="name" required maxlength="100">
+                </div>
+                <div>
+                    <label for="ip_address">Dirección IP *</label>
+                    <input id="ip_address" name="ip_address" required maxlength="45"
+                           placeholder="192.168.1.1">
+                </div>
+                <div>
+                    <label for="manufacturer">Fabricante *</label>
+                    <select id="manufacturer" name="manufacturer" required>
+                        <option value="">Seleccionar</option>
+                        <option>Cisco</option>
+                        <option>Fortinet</option>
+                        <option>Huawei</option>
+                        <option>Otro</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="device_type">Tipo de dispositivo *</label>
+                    <select id="device_type" name="device_type" required>
+                        <option value="">Seleccionar</option>
+                        <option>Router</option>
+                        <option>Switch</option>
+                        <option>Firewall</option>
+                        <option>Servidor</option>
+                        <option>Access Point</option>
+                        <option>Otro</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="status">Estado</label>
+                    <select id="status" name="status">
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                        <option value="mantenimiento">En mantenimiento</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="location">Ubicación</label>
+                    <input id="location" name="location" maxlength="150"
+                           placeholder="Ej.: Sala de comunicaciones">
+                </div>
+                <div class="full">
+                    <label for="notes">Notas</label>
+                    <textarea id="notes" name="notes" rows="3"></textarea>
+                </div>
+            </div>
+            <button type="submit">Registrar dispositivo</button>
+        </form>
+        <p>* Campos obligatorios.</p>
+    </section>
+
+    <section class="panel">
+        <h2>Inventario registrado ({{ devices|length }})</h2>
+        {% if devices %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Dirección IP</th>
+                            <th>Fabricante</th>
+                            <th>Tipo</th>
+                            <th>Estado</th>
+                            <th>Ubicación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for device in devices %}
+                            <tr>
+                                <td>{{ device["id"] }}</td>
+                                <td>{{ device["name"] }}</td>
+                                <td>{{ device["ip_address"] }}</td>
+                                <td>{{ device["manufacturer"] }}</td>
+                                <td>{{ device["device_type"] }}</td>
+                                <td>{{ device["status"] }}</td>
+                                <td>{{ device["location"] or "—" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty">
+                Todavía no hay dispositivos. Registra el primero usando el formulario.
+            </p>
+        {% endif %}
+    </section>
+</body>
+</html>
