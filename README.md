@@ -45,7 +45,7 @@ Desarrollar un prototipo para centralizar información de eventos de red y facil
 ## 6. Requisitos
 
 - Python 3.
-- Git, si se desea clonar el repositorio.
+- Git.
 - Puerto UDP 5514 disponible para probar el receptor Syslog.
 
 ## 7. Instalación y ejecución en Windows
