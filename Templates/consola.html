@@ -1,0 +1,99 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consola simulada | NOC Syslog Inteligente</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            margin: 0;
+            padding: 24px;
+        }
+        main {
+            max-width: 900px;
+            margin: auto;
+        }
+        .panel {
+            background: white;
+            padding: 24px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px #00000012;
+        }
+        .aviso {
+            background: #fef3c7;
+            padding: 14px;
+            border-radius: 8px;
+            color: #92400e;
+        }
+        .terminal {
+            background: #0f172a;
+            color: #86efac;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-wrap: anywhere;
+        }
+        code { font-size: 15px; }
+        a { color: #2563eb; }
+        li { margin: 12px 0; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Consola simulada</h1>
+    <p>NOC Syslog Inteligente | MVP v0.2.0</p>
+
+    <p class="aviso">
+        MODO DEMOSTRACIÓN: esta consola es de solo lectura.
+        No se conecta a dispositivos ni ejecuta comandos reales.
+    </p>
+
+    <section class="panel">
+        <h2>Comandos de consulta de referencia</h2>
+        <p>Selecciona un comando para consultar su descripción.</p>
+
+        <ul>
+        {% for item in comandos %}
+            <li>
+                <button type="button"
+                    onclick="mostrar('{{ item.comando }}',
+                    '{{ item.descripcion }}')">
+                    {{ item.comando }}
+                </button>
+                — {{ item.descripcion }}
+            </li>
+        {% endfor %}
+        </ul>
+    </section>
+
+    <section class="panel">
+        <h2>Terminal de demostración</h2>
+        <div class="terminal" aria-live="polite">
+            <p id="comando">Esperando selección...</p>
+            <p id="respuesta">
+                Selecciona un comando para ver una respuesta ficticia.
+            </p>
+        </div>
+    </section>
+
+
+        Ver configuraciones por fabricante
+    </a></p>
+</main>
+
+<script>
+function mostrar(comando, descripcion) {
+    document.getElementById("comando").textContent =
+        "NOC-SIMULADO> " + comando;
+
+    document.getElementById("respuesta").textContent =
+        "[SIMULACIÓN] " + descripcion +
+        ". No se consultó ningún dispositivo real.";
+}
+</script>
+</body>
+</html>

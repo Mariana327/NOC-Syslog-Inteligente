@@ -1,9 +1,29 @@
+# Entorno virtual
 .venv/
+venv/
+env/
+
+# Archivos temporales de Python
 __pycache__/
 *.py[cod]
+
+# Base de datos local
+data/*.db
+
+# Variables de entorno y posibles secretos
 .env
 .env.*
 !.env.example
-Data/*.db
-Data/*.sqlite
-Data/*.sqlite3
+
+# Configuracion del editor
+.vscode/
+.idea/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Copias de seguridad adicionales
+*.backup
+*.bak
+respaldo_noc/

@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuraciones | NOC Syslog Inteligente</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            margin: 0;
+            padding: 24px;
+        }
+        main {
+            max-width: 900px;
+            margin: auto;
+        }
+        .fabricante {
+            background: white;
+            padding: 24px;
+            margin: 18px 0;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px #00000012;
+        }
+        .comando {
+            display: block;
+            background: #0f172a;
+            color: #86efac;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-wrap: anywhere;
+        }
+        .aviso {
+            background: #dbeafe;
+            padding: 14px;
+            border-radius: 8px;
+        }
+        a { color: #2563eb; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Configuraciones por fabricante</h1>
+    <p>NOC Syslog Inteligente | MVP v0.2.0</p>
+
+    <p class="aviso">
+        Plantillas documentales de referencia.
+        No se aplican cambios ni se envían comandos a equipos reales.
+        Verifica siempre la compatibilidad con el dispositivo.
+    </p>
+
+    {% for nombre, datos in fabricantes.items() %}
+    <section class="fabricante">
+        <h2>{{ nombre }}</h2>
+        <p>{{ datos.descripcion }}</p>
+        <h3>Comando de consulta de referencia</h3>
+        <code class="comando">{{ datos.comando }}</code>
+    </section>
+    {% endfor %}
+
+        Abrir consola simulada
+    </a></p>
+</main>
+</body>
+</html>

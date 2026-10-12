@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOC Syslog Inteligente</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            padding: 16px 24px;
+            background: #0f172a;
+            color: white;
+            box-shadow: 0 2px 8px #0002;
+        }
+
+        header h1 {
+            margin: 0 0 14px;
+            font-size: 22px;
+        }
+
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        nav button {
+            border: 0;
+            border-radius: 8px;
+            padding: 11px 16px;
+            background: #334155;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        nav button:hover,
+        nav button[aria-pressed="true"] {
+            background: #2563eb;
+        }
+
+        main {
+            padding: 16px;
+        }
+
+        iframe {
+            display: block;
+            width: 100%;
+            height: calc(100vh - 155px);
+            min-height: 500px;
+            border: 0;
+            border-radius: 10px;
+            background: white;
+        }
+
+        @media (max-width: 600px) {
+            header { padding: 14px; }
+            main { padding: 8px; }
+            iframe { height: calc(100vh - 190px); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>NOC Syslog Inteligente</h1>
+        <nav aria-label="Secciones principales">
+            <button type="button" data-page="/?embedded=1"
+                    aria-pressed="true">
+                Dashboard
+            </button>
+            <button type="button" data-page="/consola"
+                    aria-pressed="false">
+                Consola
+            </button>
+            <button type="button" data-page="/configuraciones"
+                    aria-pressed="false">
+                Fabricantes
+            </button>
+        </nav>
+    </header>
+
+    <main>
+        <iframe
+            id="contenido"
+            src="/?embedded=1"
+            title="Contenido de NOC Syslog Inteligente">
+        </iframe>
+    </main>
+
+    <script>
+        const contenido = document.getElementById("contenido");
+        const botones = document.querySelectorAll("nav button");
+
+        botones.forEach((boton) => {
+            boton.addEventListener("click", () => {
+                contenido.src = boton.dataset.page;
+
+                botones.forEach((otro) => {
+                    otro.setAttribute(
+                        "aria-pressed",
+                        String(otro === boton)
+                    );
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -97,15 +97,258 @@
             .form-grid { grid-template-columns: 1fr; }
             .full { grid-column: auto; }
         }
+        
+/* Etiquetas visuales de severidad Syslog */
+.severity-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.severity-0,
+.severity-1,
+.severity-2 {
+    background-color: #b91c1c;
+}
+
+/* Resaltar eventos de máxima gravedad */
+.severity-0,
+.severity-1,
+.severity-2 {
+    border: 2px solid #7f1d1d;
+    box-shadow: 0 0 6px rgba(185, 28, 28, 0.35);
+}
+
+.severity-3 {
+    background-color: #ea580c;
+}
+
+.severity-4 {
+    background-color: #ca8a04;
+}
+
+.severity-5 {
+    background-color: #2563eb;
+}
+
+.severity-6 {
+    background-color: #0f766e;
+}
+
+.severity-7 {
+    background-color: #64748b;
+}
+
+/* Resumen de eventos Syslog */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.stat-card {
+    padding: 18px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background-color: #ffffff;
+}
+
+.stat-card h3 {
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.stat-card p {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.stat-critical {
+    border-left: 5px solid #b91c1c;
+}
+
+.stat-errors {
+    border-left: 5px solid #ea580c;
+}
+
+.stat-other {
+    border-left: 5px solid #0f766e;
+}
+
+@media (max-width: 800px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Resumen de incidentes */
+.incident-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin: 20px 0 28px;
+}
+
+.summary-card {
+    background: #ffffff;
+    border: 1px solid #dbe3ec;
+    border-left: 5px solid #2563eb;
+    border-radius: 10px;
+    padding: 18px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.summary-card h3 {
+    margin: 0 0 12px;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.summary-card p {
+    margin: 0;
+    color: #0f172a;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+
+/* Distribución del Dashboard con menú lateral */
+.dashboard-layout {
+    display: block;
+    width: 100%;
+}
+
+.dashboard-sidebar {
+    background: #1e293b;
+    padding: 12px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.dashboard-sidebar h2 {
+    color: white;
+    font-size: 17px;
+    margin: 0 10px 0 0;
+}
+
+.dashboard-menu-button {
+    display: inline-block;
+    width: auto;
+    margin: 0;
+    padding: 12px 18px;
+    background: transparent;
+    color: #e2e8f0;
+    border: 1px solid #475569;
+    border-radius: 7px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.dashboard-menu-button:hover,
+.dashboard-menu-button.active {
+    background: #2563eb;
+    color: white;
+}
+
+.dashboard-content {
+    min-width: 0;
+}
+
+.dashboard-section[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 750px) {
+    .dashboard-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-sidebar {
+        position: static;
+    }
+}
+
     </style>
 </head>
 <body>
     <h1>NOC Syslog Inteligente</h1>
     <p>MVP v0.2.0 | Inventario de dispositivos de red</p>
 
+
+{% if not request.args.get('embedded') %}
+<nav aria-label="Navegación de herramientas NOC"
+     style="display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:12px; margin:20px 0;">
+
+    <a href="{{ url_for('home') }}"
+       style="display:inline-block; padding:12px 20px; background:#1e293b; color:white; text-decoration:none; border-radius:8px; white-space:nowrap;">
+        Dashboard e inventario
+    </a>
+
+    <a href="{{ url_for('consola_simulada') }}"
+       style="display:inline-block; padding:12px 20px; background:#2563eb; color:white; text-decoration:none; border-radius:8px; white-space:nowrap;">
+        Consola simulada
+    </a>
+
+    <a href="{{ url_for('configuraciones') }}"
+       style="display:inline-block; padding:12px 20px; background:#0f766e; color:white; text-decoration:none; border-radius:8px; white-space:nowrap;">
+        Configuraciones por fabricante
+    </a>
+
+</nav>
+{% endif %}
+
+<div class="dashboard-layout">
+
+    <aside class="dashboard-sidebar">
+        <h2>Menú del Dashboard</h2>
+
+        <button type="button"
+                class="dashboard-menu-button active"
+                data-section="dispositivos">
+            Dispositivos
+        </button>
+
+        <button type="button"
+                class="dashboard-menu-button"
+                data-section="incidentes">
+            Incidentes
+        </button>
+
+        <button type="button"
+                class="dashboard-menu-button"
+                data-section="eventos">
+            Eventos Syslog
+        </button>
+    </aside>
+
+    <main class="dashboard-content">
+
     {% for category, message in get_flashed_messages(with_categories=true) %}
         <div class="panel messages {{ category }}">{{ message }}</div>
+ 
     {% endfor %}
+
+    <div class="dashboard-section" id="vista-dispositivos">
 
     <section class="panel">
         <h2>Registrar dispositivo</h2>
@@ -240,5 +483,541 @@
             </p>
         {% endif %}
     </section>
+
+    </div>
+  
+<div class="dashboard-section" id="vista-incidentes" hidden>
+      <section class="panel" id="seccion-incidentes">
+        
+<div class="incident-summary">
+    <div class="summary-card">
+        <h3>Total de incidentes</h3>
+        <p>{{ incident_stats["total"] or 0 }}</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>Abiertos</h3>
+        <p>{{ incident_stats["abiertos"] or 0 }}</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>En progreso</h3>
+        <p>{{ incident_stats["en_progreso"] or 0 }}</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>Resueltos</h3>
+        <p>{{ incident_stats["resueltos"] or 0 }}</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>Cerrados</h3>
+        <p>{{ incident_stats["cerrados"] or 0 }}</p>
+    </div>
+</div>
+        <h2>Registrar incidente</h2>
+        <p>Registra y documenta incidentes detectados en la red.</p>
+
+        <form action="{{ url_for('create_incident') }}" method="post">
+            <div class="form-grid">
+                <div>
+                    <label for="incident_title">Título del incidente *</label>
+                    <input id="incident_title" name="title" required maxlength="150"
+                           placeholder="Ej.: Pérdida de conectividad">
+                </div>
+
+                <div>
+                    <label for="incident_severity">Severidad *</label>
+                    <select id="incident_severity" name="severity" required>
+                        <option value="">Seleccionar severidad</option>
+                        <option value="0">0 - Emergencia</option>
+                        <option value="1">1 - Alerta</option>
+                        <option value="2">2 - Crítico</option>
+                        <option value="3">3 - Error</option>
+                        <option value="4">4 - Advertencia</option>
+                        <option value="5">5 - Aviso</option>
+                        <option value="6">6 - Informativo</option>
+                        <option value="7">7 - Depuración</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="incident_source_ip">IP de origen</label>
+                    <input id="incident_source_ip" name="source_ip" maxlength="45"
+                           placeholder="Ej.: 192.168.1.10">
+                </div>
+
+                <div>
+                    <label for="incident_assigned_to">Responsable</label>
+                    <input id="incident_assigned_to" name="assigned_to" maxlength="100"
+                           placeholder="Nombre del responsable">
+                </div>
+
+                <div class="full">
+                    <label for="incident_description">Descripción *</label>
+                    <textarea id="incident_description" name="description" rows="4"
+                              required maxlength="2000"
+                              placeholder="Describe el problema detectado y su posible impacto."></textarea>
+                </div>
+            </div>
+
+            <button type="submit">Registrar incidente</button>
+            <p>* Campos obligatorios.</p>
+        </form>
+    </section>
+
+    <section class="panel" id="lista-incidentes">
+    <h2>Incidentes registrados ({{ incidents|length }})</h2>
+
+
+
+<form action="{{ url_for('home') }}#lista-incidentes" method="get" class="filters-form">
+    <div class="filter-field">
+        <label for="incident_status">Filtrar por estado:</label>
+        <select name="incident_status" id="incident_status">
+            <option value="" {% if not request.args.get('incident_status') %}selected{% endif %}>Todos los estados</option>
+            <option value="abierto" {% if request.args.get('incident_status') == 'abierto' %}selected{% endif %}>Abierto</option>
+            <option value="en_progreso" {% if request.args.get('incident_status') == 'en_progreso' %}selected{% endif %}>En progreso</option>
+            <option value="resuelto" {% if request.args.get('incident_status') == 'resuelto' %}selected{% endif %}>Resuelto</option>
+            <option value="cerrado" {% if request.args.get('incident_status') == 'cerrado' %}selected{% endif %}>Cerrado</option>
+        </select>
+    </div>
+
+    <div class="filter-field">
+        <label for="incident_severity">Filtrar por severidad:</label>
+        <select name="incident_severity" id="incident_severity">
+            <option value="" {% if not request.args.get('incident_severity') %}selected{% endif %}>Todas las severidades</option>
+            <option value="0" {% if request.args.get('incident_severity') == '0' %}selected{% endif %}>0 - Emergencia</option>
+            <option value="1" {% if request.args.get('incident_severity') == '1' %}selected{% endif %}>1 - Alerta</option>
+            <option value="2" {% if request.args.get('incident_severity') == '2' %}selected{% endif %}>2 - Crítico</option>
+            <option value="3" {% if request.args.get('incident_severity') == '3' %}selected{% endif %}>3 - Error</option>
+            <option value="4" {% if request.args.get('incident_severity') == '4' %}selected{% endif %}>4 - Advertencia</option>
+            <option value="5" {% if request.args.get('incident_severity') == '5' %}selected{% endif %}>5 - Aviso</option>
+            <option value="6" {% if request.args.get('incident_severity') == '6' %}selected{% endif %}>6 - Informativo</option>
+            <option value="7" {% if request.args.get('incident_severity') == '7' %}selected{% endif %}>7 - Depuración</option>
+        </select>
+    </div>
+
+    <button type="submit">Filtrar</button>
+    <a href="{{ url_for('home') }}#seccion-incidentes">Limpiar filtros</a>
+</form>
+    {% if incidents %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Título</th>
+                        <th>Severidad</th>
+                        <th>Estado</th>
+                        <th>IP de origen</th>
+                        <th>Responsable</th>
+                        <th>Fecha de creación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for incident in incidents %}
+                        <tr>
+                            <td>{{ incident["id"] }}</td>
+                            <td>{{ incident["title"] }}</td>
+                            <td>
+                                <span class="severity-badge severity-{{ incident['severity'] }}">
+                                    {{ incident["severity"] }}
+                                </span>
+                            </td>
+                            <td>
+    <form action="{{ url_for('update_incident_status', incident_id=incident['id']) }}"
+          method="post" class="status-form">
+        <select name="status" aria-label="Estado del incidente">
+            <option value="abierto"
+                {% if incident["status"] == "abierto" %}selected{% endif %}>
+                Abierto
+            </option>
+            <option value="en_progreso"
+                {% if incident["status"] == "en_progreso" %}selected{% endif %}>
+                En progreso
+            </option>
+            <option value="resuelto"
+                {% if incident["status"] == "resuelto" %}selected{% endif %}>
+                Resuelto
+            </option>
+            <option value="cerrado"
+                {% if incident["status"] == "cerrado" %}selected{% endif %}>
+                Cerrado
+            </option>
+        </select>
+        <button type="submit">Actualizar</button>
+    </form>
+</td>
+                            <td>{{ incident["source_ip"] or "—" }}</td>
+                            <td>{{ incident["assigned_to"] or "—" }}</td>
+                            <td>{{ incident["created_at"] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        
+{% if request.args.get('incident_status') %}
+    <p class="empty">No hay incidentes que coincidan con el estado seleccionado.</p>
+{% else %}
+    <p class="empty">Todavía no hay incidentes registrados.</p>
+{% endif %}
+ 
+    {% endif %}
+</section>
+
+</div>
+
+<div class="dashboard-section" id="vista-eventos" hidden>
+<section class="panel" id="seccion-eventos">
+    <h2>Eventos Syslog recientes ({{ syslog_events|length }})</h2>
+
+<form method="GET" action="{{ url_for('home') }}#seccion-eventos" class="filters-form">
+    <div class="filter-field">
+        <label for="severity">Severidad</label>
+        <select name="severity" id="severity">
+            <option value="">Todas las severidades</option>
+            <option value="0" {% if selected_severity == "0" %}selected{% endif %}>0 - Emergencia</option>
+            <option value="1" {% if selected_severity == "1" %}selected{% endif %}>1 - Alerta</option>
+            <option value="2" {% if selected_severity == "2" %}selected{% endif %}>2 - Crítico</option>
+            <option value="3" {% if selected_severity == "3" %}selected{% endif %}>3 - Error</option>
+            <option value="4" {% if selected_severity == "4" %}selected{% endif %}>4 - Advertencia</option>
+            <option value="5" {% if selected_severity == "5" %}selected{% endif %}>5 - Aviso</option>
+            <option value="6" {% if selected_severity == "6" %}selected{% endif %}>6 - Informativo</option>
+            <option value="7" {% if selected_severity == "7" %}selected{% endif %}>7 - Depuración</option>
+        </select>
+    </div>
+
+    <div class="filter-field">
+        <label for="source_ip">Dirección IP</label>
+        <input
+            type="text"
+            id="source_ip"
+            name="source_ip"
+            placeholder="Ej. 192.168.1.10"
+            value="{{ selected_source_ip }}"
+        >
+    </div>
+
+    <div class="filter-field">
+        <label for="event_date">Fecha</label>
+        <input
+            type="date"
+            id="event_date"
+            name="event_date"
+            value="{{ selected_event_date }}"
+        >
+    </div>
+
+    <button type="submit">Filtrar eventos</button>
+    
+
+<button type="button" class="filter-reset" id="limpiar-filtros-eventos">
+    Limpiar filtros
+</button>
+</form>
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Total de eventos</h3>
+        <p>{{ event_stats["total"] }}</p>
+    </div>
+
+    <div class="stat-card stat-critical">
+        <h3>Emergencia, alerta y crítico</h3>
+        <p>{{ event_stats["critical"] or 0 }}</p>
+    </div>
+
+    <div class="stat-card stat-errors">
+        <h3>Errores</h3>
+        <p>{{ event_stats["errors"] or 0 }}</p>
+    </div>
+
+    <div class="stat-card stat-other">
+        <h3>Advertencias e información</h3>
+        <p>{{ event_stats["other_events"] or 0 }}</p>
+    </div>
+</div>
+
+    {% if syslog_events %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha de recepción (UTC)</th>
+                    <th>IP de origen</th>
+                    <th>Facility</th>
+                    <th>Severidad</th>
+                    <th>Mensaje</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in syslog_events %}
+                <tr>
+                    <td>{{ event["id"] }}</td>
+                    <td>{{ event["received_at"] }}</td>
+                    <td>{{ event["source_ip"] }}</td>
+                    <td>{{ event["facility"] if event["facility"] is not none else "—" }}</td>
+                    
+<td>
+    {% set severity_names = {
+        0: "Emergencia",
+        1: "Alerta",
+        2: "Crítico",
+        3: "Error",
+        4: "Advertencia",
+        5: "Aviso",
+        6: "Informativo",
+        7: "Depuración"
+    } %}
+    <span class="severity-badge severity-{{ event['severity'] }}">
+        {{ event["severity"] }} - {{ severity_names.get(event["severity"], "Desconocido") }}
+    </span>
+</td>
+
+                    <td>{{ event["message"] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>Todavía no se han recibido eventos Syslog.</p>
+    {% endif %}
+</section>
+</div>
+</main>
+</div>
+
+<script>
+
+    // Navegación del menú lateral del Dashboard.
+    document.querySelectorAll(".dashboard-menu-button").forEach(function (boton) {
+        boton.addEventListener("click", function () {
+            const destino = boton.dataset.section;
+
+            const vistas = {
+                dispositivos: "vista-dispositivos",
+                incidentes: "vista-incidentes",
+                eventos: "vista-eventos"
+            };
+
+            document.querySelectorAll(".dashboard-section").forEach(function (vista) {
+                vista.hidden = true;
+            });
+
+            document.getElementById(vistas[destino]).hidden = false;
+
+            document.querySelectorAll(".dashboard-menu-button").forEach(function (elemento) {
+                elemento.classList.remove("active");
+            });
+
+            boton.classList.add("active");
+        });
+    });
+
+    // Evitar actualizaciones mientras el usuario utiliza formularios.
+    let usandoFormulario = false;
+
+    document.addEventListener("focusin", function (event) {
+        if (event.target.closest("form")) {
+            usandoFormulario = true;
+        }
+    });
+
+    document.addEventListener("input", function (event) {
+        if (event.target.closest("form")) {
+            usandoFormulario = true;
+        }
+    });
+
+    document.addEventListener("change", function (event) {
+        if (event.target.closest("form")) {
+            usandoFormulario = true;
+        }
+    });
+
+    // Actualizar una sección sin recargar toda la página.
+ 
+async function actualizarSeccion(url, secciones) {
+    const posicionScroll = window.scrollY;
+
+    const respuesta = await fetch(url, {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+
+    if (!respuesta.ok) {
+        throw new Error("No se pudo actualizar la sección.");
+    }
+
+    const html = await respuesta.text();
+    const documento = new DOMParser().parseFromString(
+        html,
+        "text/html"
+    );
+
+    secciones.forEach(function (id) {
+        const actual = document.getElementById(id);
+        const nueva = documento.getElementById(id);
+
+        if (actual && nueva) {
+            actual.innerHTML = nueva.innerHTML;
+        }
+    });
+
+    // Conservar la posición vertical antes y después de actualizar.
+    window.scrollTo({
+        top: posicionScroll,
+        behavior: "instant"
+    });
+}
+
+    // Cambiar el estado de un incidente sin recargar la página.
+    document.addEventListener("submit", async function (event) {
+        const formulario = event.target;
+
+        if (!formulario.matches("form.status-form")) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const boton = formulario.querySelector('button[type="submit"]');
+        if (boton) {
+            boton.disabled = true;
+        }
+
+        try {
+            const respuesta = await fetch(formulario.action, {
+                method: "POST",
+                body: new FormData(formulario),
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            if (!respuesta.ok) {
+                throw new Error("No se pudo actualizar el estado.");
+            }
+
+            await actualizarSeccion(
+    window.location.href,
+    ["seccion-incidentes", "lista-incidentes"]
+);
+
+            usandoFormulario = false;
+        } catch (error) {
+            console.error(error);
+            window.location.reload();
+        } finally {
+            if (boton) {
+                boton.disabled = false;
+            }
+        }
+    });
+    // Aplicar los filtros sin recargar la página completa.
+    document.addEventListener("submit", async function (event) {
+        const formulario = event.target;
+
+        if (
+            !formulario.matches("form.filters-form") ||
+            formulario.method.toLowerCase() !== "get"
+        ) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const boton = formulario.querySelector(
+            'button[type="submit"], input[type="submit"]'
+        );
+
+        if (boton) {
+            boton.disabled = true;
+        }
+
+        const url = new URL(formulario.action, window.location.href);
+        url.search = new URLSearchParams(
+            new FormData(formulario)
+        ).toString();
+
+        const destino = url.hash.substring(1);
+
+        try {
+            const secciones = destino === "lista-incidentes"
+                ? ["lista-incidentes"]
+                : destino === "seccion-eventos"
+                    ? ["seccion-eventos"]
+                    : [];
+
+            if (secciones.length === 0) {
+                throw new Error("No se identificó la sección del filtro.");
+            }
+
+            await actualizarSeccion(url.href, secciones);
+
+    // Actualizar la dirección sin provocar una recarga.
+            history.pushState({}, "", url.href);
+            usandoFormulario = false;
+        } catch (error) {
+            console.error(error);
+            window.location.href = url.href;
+        } finally {
+            if (boton) {
+                boton.disabled = false;
+            }
+        }
+    });
+
+    // Actualización automática cada 5 segundos, sin recargar toda la página.
+    setInterval(async function () {
+        if (usandoFormulario) {
+            return;
+        }
+
+        try {
+            await actualizarSeccion(
+                window.location.href,
+                ["lista-incidentes", "seccion-eventos"]
+            );
+        } catch (error) {
+            console.error("No se pudieron actualizar los paneles:", error);
+        }
+    }, 5000);
+    
+// Limpiar filtros Syslog sin recargar toda la página.
+    document.addEventListener("click", async function (event) {
+        const boton = event.target.closest("#limpiar-filtros-eventos");
+
+        if (!boton) {
+            return;
+        }
+
+        const url = new URL(window.location.href);
+        url.searchParams.delete("severity");
+        url.searchParams.delete("source_ip");
+        url.searchParams.delete("event_date");
+        url.hash = "seccion-eventos";
+
+        boton.disabled = true;
+
+        try {
+            await actualizarSeccion(
+                url.href,
+                ["seccion-eventos"]
+            );
+
+            history.pushState({}, "", url.href);
+            usandoFormulario = false;
+        } catch (error) {
+            console.error("Error al limpiar los filtros:", error);
+            window.location.href = url.href;
+        } finally {
+            boton.disabled = false;
+        }
+    });
+</script>
 </body>
 </html>
