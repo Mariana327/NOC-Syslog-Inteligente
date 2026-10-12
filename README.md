@@ -76,7 +76,7 @@ python -m venv .venv
 
 Abre en el navegador:
 
-http://127.0.0.1:5000/panel
+http://127.0.0.1:5000/
 
 Para detener el servidor, presiona `Ctrl + C` en la terminal.
 
