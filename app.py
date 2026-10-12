@@ -1,4 +1,5 @@
-﻿import sqlite3
+﻿import ipaddress
+import sqlite3
 from pathlib import Path
 
 from flask import Flask, render_template, request, redirect, url_for, flash
@@ -29,6 +30,7 @@ def home():
 
 @app.route("/devices", methods=["POST"])
 def create_device():
+    # Obtener y limpiar los datos del formulario
     name = request.form.get("name", "").strip()
     ip_address = request.form.get("ip_address", "").strip()
     manufacturer = request.form.get("manufacturer", "").strip()
@@ -37,14 +39,28 @@ def create_device():
     location = request.form.get("location", "").strip()
     notes = request.form.get("notes", "").strip()
 
+    # Validar los campos obligatorios
     if not all([name, ip_address, manufacturer, device_type]):
         flash("Completa todos los campos obligatorios.", "error")
         return redirect(url_for("home"))
 
+    # Validar que la dirección sea una IPv4 o IPv6 correcta
+    try:
+        ipaddress.ip_address(ip_address)
+    except ValueError:
+        flash(
+            "La dirección IP no es válida. "
+            "Introduce una dirección IPv4 o IPv6 correcta.",
+            "error",
+        )
+        return redirect(url_for("home"))
+
+    # Validar el estado del dispositivo
     if status not in ("activo", "inactivo", "mantenimiento"):
         flash("El estado seleccionado no es válido.", "error")
         return redirect(url_for("home"))
 
+    # Registrar el dispositivo en SQLite
     try:
         with get_connection() as connection:
             connection.execute(
@@ -64,6 +80,7 @@ def create_device():
                     notes or None,
                 ),
             )
+
         flash("Dispositivo registrado correctamente.", "success")
 
     except sqlite3.IntegrityError:
