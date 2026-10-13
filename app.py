@@ -5,7 +5,7 @@ from datetime import datetime
 
 from flask import Flask, render_template, request, redirect, url_for, flash
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="Templates")
 app.config["SECRET_KEY"] = "dev-only-change-before-deployment"
 
 BASE_DIR = Path(__file__).resolve().parent
