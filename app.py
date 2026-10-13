@@ -13,13 +13,26 @@ DATABASE_PATH = BASE_DIR / "Data" / "noc_syslog.db"
 
 VALID_STATUSES = ("activo", "inactivo", "mantenimiento")
 
-
 def get_connection():
+    DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
+
     connection = sqlite3.connect(DATABASE_PATH)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys = ON")
     return connection
 
+
+def init_db():
+    DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    schema_path = BASE_DIR / "schema.sql"
+
+    with sqlite3.connect(DATABASE_PATH) as connection:
+        schema = schema_path.read_text(encoding="utf-8")
+        connection.executescript(schema)
+
+
+init_db()
 
 def validate_device_form():
     """Obtiene y valida los datos enviados por el formulario."""
