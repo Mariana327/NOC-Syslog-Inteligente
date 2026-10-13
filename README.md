@@ -56,7 +56,7 @@ Abre PowerShell en la carpeta `NOC-Syslog-Inteligente`.
 
 ### Paso 2. Crear el entorno virtual
 
-Si todavía no existe, ejecuta:
+Ejecutar:
 
 ```powershell
 python -m venv .venv
@@ -74,15 +74,13 @@ python -m venv .venv
 .\.venv\Scripts\python.exe .\app.py
 ```
 
-Abre en el navegador:
+Aplicación en el navegador:
 
-http://127.0.0.1:5000/
-
-Para detener el servidor, presiona `Ctrl + C` en la terminal.
+https://noc-syslog-inteligente.onrender.com/
 
 ### Paso 5. Iniciar el receptor Syslog
 
-Si deseas probar el receptor, abre una segunda terminal en la carpeta del proyecto y ejecuta:
+Para robar el receptor, abrir una segunda terminal en la carpeta del proyecto y ejecutar:
 
 ```powershell
 .\.venv\Scripts\python.exe .\syslog_receiver.py
