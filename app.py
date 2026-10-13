@@ -1,10 +1,11 @@
-﻿import ipaddress
+﻿import os
+import secrets
+import ipaddress
 import sqlite3
 from pathlib import Path
 from datetime import datetime
 
-from flask import Flask, render_template, request, redirect, url_for, flash
-
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 app = Flask(__name__, template_folder="Templates")
 app.config["SECRET_KEY"] = "dev-only-change-before-deployment"
 
@@ -33,6 +34,82 @@ def init_db():
 
 
 init_db()
+
+@app.route("/api/syslog", methods=["POST"])
+def receive_syslog():
+    expected_token = os.environ.get("SYSLOG_INGEST_TOKEN", "")
+    provided_token = request.headers.get("X-Syslog-Token", "")
+
+    if not expected_token or not secrets.compare_digest(
+        provided_token, expected_token
+    ):
+        return jsonify({"error": "No autorizado"}), 401
+
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return jsonify({"error": "Se requiere un JSON válido"}), 400
+
+    source_ip = str(data.get("source_ip", "")).strip()
+    raw_message = str(data.get("message", "")).strip()
+
+    try:
+        source_ip = str(ipaddress.ip_address(source_ip))
+    except ValueError:
+        return jsonify({"error": "La IP de origen no es válida"}), 400
+
+    if not raw_message.startswith("<") or ">" not in raw_message:
+        return jsonify({"error": "El mensaje Syslog no es válido"}), 400
+
+    try:
+        end = raw_message.index(">")
+        priority = int(raw_message[1:end])
+
+        if not 0 <= priority <= 191:
+            raise ValueError
+
+        facility = priority // 8
+        severity = priority % 8
+        message = raw_message[end + 1:].strip()
+
+        if not message:
+            raise ValueError
+
+    except ValueError:
+        return jsonify({"error": "Prioridad Syslog no válida"}), 400
+
+    with get_connection() as connection:
+        device = connection.execute(
+            "SELECT id FROM devices WHERE ip_address = ?",
+            (source_ip,),
+        ).fetchone()
+
+        device_id = device["id"] if device else None
+
+        cursor = connection.execute(
+            """
+            INSERT INTO syslog_events
+                (device_id, source_ip, facility, severity, message, raw_message)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                device_id,
+                source_ip,
+                facility,
+                severity,
+                message,
+                raw_message,
+            ),
+        )
+
+        event_id = cursor.lastrowid
+
+    return jsonify({
+        "status": "ok",
+        "message": "Evento Syslog registrado",
+        "event_id": event_id,
+        "severity": severity,
+    }), 201
 
 def validate_device_form():
     """Obtiene y valida los datos enviados por el formulario."""
