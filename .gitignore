@@ -8,7 +8,10 @@ __pycache__/
 *.py[cod]
 
 # Base de datos local
+Data/*.db
+Data/*.db-*
 data/*.db
+data/*.db-*
 
 # Variables de entorno y posibles secretos
 .env

@@ -7,12 +7,16 @@ from datetime import datetime
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 app = Flask(__name__, template_folder="Templates")
-app.config["SECRET_KEY"] = "dev-only-change-before-deployment"
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
+
+if not app.config["SECRET_KEY"]:
+    raise RuntimeError("La variable de entorno SECRET_KEY no está configurada.")
 
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE_PATH = BASE_DIR / "Data" / "noc_syslog.db"
 
 VALID_STATUSES = ("activo", "inactivo", "mantenimiento")
+MAX_SYSLOG_MESSAGE_BYTES = 8192
 
 def get_connection():
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -45,6 +49,11 @@ def receive_syslog():
     ):
         return jsonify({"error": "No autorizado"}), 401
 
+    if request.content_length is not None:
+        if request.content_length > MAX_SYSLOG_MESSAGE_BYTES:
+            return jsonify({
+                "error": "El mensaje Syslog supera el tamaño máximo permitido."
+            }), 413
     data = request.get_json(silent=True)
 
     if not isinstance(data, dict):
@@ -52,7 +61,10 @@ def receive_syslog():
 
     source_ip = str(data.get("source_ip", "")).strip()
     raw_message = str(data.get("message", "")).strip()
-
+    if len(raw_message.encode("utf-8")) > MAX_SYSLOG_MESSAGE_BYTES:
+        return jsonify({
+            "error": "El mensaje Syslog supera el tamaño máximo permitido."
+        }), 413
     try:
         source_ip = str(ipaddress.ip_address(source_ip))
     except ValueError:
