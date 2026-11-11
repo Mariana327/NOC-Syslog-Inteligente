@@ -2,6 +2,7 @@
 import secrets
 import ipaddress
 import sqlite3
+import requests
 from pathlib import Path
 from datetime import datetime
 
@@ -19,7 +20,60 @@ DATABASE_PATH = BASE_DIR / "Data" / "noc_syslog.db"
 
 VALID_STATUSES = ("activo", "inactivo", "mantenimiento")
 MAX_SYSLOG_MESSAGE_BYTES = 8192
+def send_telegram_alert(source_ip, severity, message, event_id):
+    """Envía una alerta Syslog a Telegram cuando corresponde."""
 
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+
+    if not bot_token or not chat_id:
+        print("Telegram no está configurado.")
+        return False
+
+    severity_names = {
+        0: "EMERGENCIA",
+        1: "ALERTA",
+        2: "CRÍTICO",
+        3: "ERROR",
+    }
+
+    if severity not in severity_names:
+        return False
+
+    text = (
+        "🚨 ALERTA NOC SYSLOG INTELIGENTE\n\n"
+        f"Evento: #{event_id}\n"
+        f"IP de origen: {source_ip}\n"
+        f"Severidad: {severity_names[severity]}\n"
+        f"Mensaje: {message[:1000]}"
+    )
+
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+
+    try:
+        response = requests.post(
+            url,
+            json={
+                "chat_id": chat_id,
+                "text": text,
+            },
+            timeout=5,
+        )
+
+        response.raise_for_status()
+
+        result = response.json()
+
+        if result.get("ok"):
+            print(f"Alerta Telegram enviada para el evento #{event_id}.")
+            return True
+
+        print("Telegram no confirmó el envío.")
+        return False
+
+    except requests.RequestException as error:
+        print(f"Error al enviar alerta a Telegram: {error}")
+        return False
 def get_connection():
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
 
@@ -118,6 +172,13 @@ def receive_syslog():
         )
 
         event_id = cursor.lastrowid
+
+    send_telegram_alert(
+        source_ip,
+        severity,
+        message,
+        event_id,
+    )
 
     return jsonify({
         "status": "ok",
