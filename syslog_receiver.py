@@ -1,7 +1,10 @@
 
 import ipaddress
+import os
 import socket
 import sqlite3
+import requests
+
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -9,7 +12,8 @@ DATABASE_PATH = BASE_DIR / "Data" / "noc_syslog.db"
 
 SYSLOG_HOST = "0.0.0.0"
 SYSLOG_PORT = 5514
-
+SYSLOG_API_URL = "https://noc-syslog-inteligente.onrender.com/api/syslog"
+SYSLOG_TIMEOUT = 10
 
 def parse_syslog(message):
     """Extrae la severidad y la facility de un mensaje Syslog estándar."""
@@ -33,6 +37,46 @@ def parse_syslog(message):
     except (ValueError, IndexError):
         return None
 
+def send_event_to_render(source_ip, raw_message):
+    """Envía un evento Syslog a la API de Render."""
+
+    token = os.environ.get("SYSLOG_INGEST_TOKEN")
+
+    if not token:
+        print("Error: no está configurado el token Syslog.")
+        return False
+
+    headers = {
+        "X-Syslog-Token": token,
+        "Content-Type": "application/json",
+    }
+
+    payload = {
+        "source_ip": source_ip,
+        "message": raw_message,
+    }
+
+    try:
+        response = requests.post(
+            SYSLOG_API_URL,
+            json=payload,
+            headers=headers,
+            timeout=SYSLOG_TIMEOUT,
+        )
+
+        if response.status_code == 201:
+            print("Evento enviado correctamente a Render.")
+            return True
+
+        print(
+            f"Error de Render: HTTP {response.status_code} "
+            f"| {response.text[:200]}"
+        )
+        return False
+
+    except requests.RequestException as error:
+        print(f"No se pudo conectar con Render: {error}")
+        return False
 
 def save_event(source_ip, facility, severity, message, raw_message):
     """Guarda el evento Syslog en SQLite."""
@@ -101,6 +145,7 @@ def start_receiver():
                 message,
                 raw_message,
             )
+            send_event_to_render(address[0], raw_message)
 
             print(
                 f"Evento guardado | IP: {address[0]} "
