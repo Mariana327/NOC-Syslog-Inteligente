@@ -44,7 +44,7 @@ def send_telegram_alert(source_ip, severity, message, event_id):
         "🚨 ALERTA NOC SYSLOG INTELIGENTE\n\n"
         f"Evento: #{event_id}\n"
         f"IP de origen: {source_ip}\n"
-        f"Severidad: {severity_names[severity]}\n"
+        f"Severidad: {severity} - {severity_names[severity]}\n"
         f"Mensaje: {message[:1000]}"
     )
 
@@ -186,6 +186,94 @@ def receive_syslog():
         "event_id": event_id,
         "severity": severity,
     }), 201
+
+
+@app.route("/generar-eventos-demo", methods=["POST"])
+def generate_demo_events():
+    """Genera eventos Syslog ficticios para demostración."""
+
+    facility = 1
+
+    demo_events = {
+        0: "Fallo total simulado del dispositivo de red.",
+        1: "Posible intento de acceso no autorizado.",
+        2: "Interrupción crítica de una interfaz.",
+        3: "Error en la conexión de red.",
+        4: "Uso elevado de CPU.",
+        5: "Cambio de configuración.",
+        6: "Inicio de sesión de usuario.",
+        7: "Información de diagnóstico.",
+    }
+
+    selected_severity = request.form.get("severity", "todas")
+
+    if selected_severity == "todas":
+        events_to_generate = list(demo_events.items())
+
+    elif selected_severity.isdigit() and int(selected_severity) in demo_events:
+        severity = int(selected_severity)
+        events_to_generate = [(severity, demo_events[severity])]
+
+    else:
+        flash("La severidad seleccionada no es válida.", "error")
+        return redirect(url_for("home") + "#seccion-eventos")
+
+    source_ip = "192.168.100.10"
+    created_events = []
+
+    connection = get_connection()
+
+    try:
+        for severity, message in events_to_generate:
+            simulated_message = "[SIMULADO] " + message
+            priority = facility * 8 + severity
+            raw_message = f"<{priority}>{simulated_message}"
+
+            cursor = connection.execute(
+                """
+                INSERT INTO syslog_events
+                    (device_id, source_ip, facility, severity, message, raw_message)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    None,
+                    source_ip,
+                    facility,
+                    severity,
+                    simulated_message,
+                    raw_message,
+                ),
+            )
+
+            created_events.append(
+                (cursor.lastrowid, severity, simulated_message)
+            )
+
+        connection.commit()
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
+
+    for event_id, severity, message in created_events:
+        send_telegram_alert(
+            source_ip,
+            severity,
+            message,
+            event_id,
+        )
+
+    total = len(created_events)
+
+    flash(
+        f"Se generaron {total} evento(s) Syslog simulado(s) correctamente.",
+        "success",
+    )
+
+    return redirect(url_for("home") + "#vista-eventos")
 
 def validate_device_form():
     """Obtiene y valida los datos enviados por el formulario."""

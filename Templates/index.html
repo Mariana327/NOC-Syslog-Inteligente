@@ -717,6 +717,34 @@
 <section class="panel" id="seccion-eventos">
     <h2>Eventos Syslog recientes ({{ syslog_events|length }})</h2>
 
+<div class="demo-events-panel">
+    <h3>Generador de eventos de demostración</h3>
+
+    <form method="POST" action="{{ url_for('generate_demo_events') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="filter-field">
+            <label for="demo_severity">Seleccionar severidad</label>
+
+            <select name="severity" id="demo_severity">
+                <option value="todas">Todas las severidades</option>
+                <option value="0">0 - Emergencia</option>
+                <option value="1">1 - Alerta</option>
+                <option value="2">2 - Crítico</option>
+                <option value="3">3 - Error</option>
+                <option value="4">4 - Advertencia</option>
+                <option value="5">5 - Aviso</option>
+                <option value="6">6 - Informativo</option>
+                <option value="7">7 - Depuración</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn-primary">
+            Generar eventos de demostración
+        </button>
+    </form>
+</div>
+
 <form method="GET" action="{{ url_for('home') }}#seccion-eventos" class="filters-form">
     <div class="filter-field">
         <label for="severity">Severidad</label>
@@ -837,29 +865,48 @@
 <script>
 
     // Navegación del menú lateral del Dashboard.
-    document.querySelectorAll(".dashboard-menu-button").forEach(function (boton) {
-        boton.addEventListener("click", function () {
-            const destino = boton.dataset.section;
+const vistas = {
+    dispositivos: "vista-dispositivos",
+    incidentes: "vista-incidentes",
+    eventos: "vista-eventos"
+};
 
-            const vistas = {
-                dispositivos: "vista-dispositivos",
-                incidentes: "vista-incidentes",
-                eventos: "vista-eventos"
-            };
+function mostrarVista(destino) {
+    if (!vistas[destino]) {
+        return;
+    }
 
-            document.querySelectorAll(".dashboard-section").forEach(function (vista) {
-                vista.hidden = true;
-            });
-
-            document.getElementById(vistas[destino]).hidden = false;
-
-            document.querySelectorAll(".dashboard-menu-button").forEach(function (elemento) {
-                elemento.classList.remove("active");
-            });
-
-            boton.classList.add("active");
-        });
+    document.querySelectorAll(".dashboard-section").forEach(function (vista) {
+        vista.hidden = true;
     });
+
+    document.getElementById(vistas[destino]).hidden = false;
+
+    document.querySelectorAll(".dashboard-menu-button").forEach(function (elemento) {
+        elemento.classList.remove("active");
+    });
+
+    const botonActivo = document.querySelector(
+        `.dashboard-menu-button[data-section="${destino}"]`
+    );
+
+    if (botonActivo) {
+        botonActivo.classList.add("active");
+    }
+
+    sessionStorage.setItem("vistaDashboard", destino);
+}
+
+// Recuperar la última sección después de cargar la página.
+const vistaGuardada = sessionStorage.getItem("vistaDashboard");
+mostrarVista(vistaGuardada || "dispositivos");
+
+// Escuchar los cambios del menú.
+document.querySelectorAll(".dashboard-menu-button").forEach(function (boton) {
+    boton.addEventListener("click", function () {
+        mostrarVista(boton.dataset.section);
+    });
+});
 
     // Evitar actualizaciones mientras el usuario utiliza formularios.
     let usandoFormulario = false;
