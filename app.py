@@ -6,11 +6,13 @@ from pathlib import Path
 from datetime import datetime
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask_wtf.csrf import CSRFProtect
 app = Flask(__name__, template_folder="Templates")
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
 if not app.config["SECRET_KEY"]:
     raise RuntimeError("La variable de entorno SECRET_KEY no está configurada.")
+csrf = CSRFProtect(app)
 
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE_PATH = BASE_DIR / "Data" / "noc_syslog.db"
@@ -40,6 +42,7 @@ def init_db():
 init_db()
 
 @app.route("/api/syslog", methods=["POST"])
+@csrf.exempt
 def receive_syslog():
     expected_token = os.environ.get("SYSLOG_INGEST_TOKEN", "")
     provided_token = request.headers.get("X-Syslog-Token", "")

@@ -389,6 +389,8 @@
         <h2>Registrar dispositivo</h2>
 
         <form action="{{ url_for('create_device') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
             <div class="form-grid">
                 <div>
                     <label for="name">Nombre *</label>
@@ -500,6 +502,8 @@
                                               onsubmit="return confirm(
                                                   '¿Seguro que deseas eliminar este dispositivo?'
                                               );">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                                             <button class="delete-button"
                                                     type="submit">
                                                 Eliminar
@@ -554,6 +558,8 @@
         <p>Registra y documenta incidentes detectados en la red.</p>
 
         <form action="{{ url_for('create_incident') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
             <div class="form-grid">
                 <div>
                     <label for="incident_title">Título del incidente *</label>
@@ -663,6 +669,8 @@
                             <td>
     <form action="{{ url_for('update_incident_status', incident_id=incident['id']) }}"
           method="post" class="status-form">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
         <select name="status" aria-label="Estado del incidente">
             <option value="abierto"
                 {% if incident["status"] == "abierto" %}selected{% endif %}>
