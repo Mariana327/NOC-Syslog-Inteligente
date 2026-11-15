@@ -884,6 +884,33 @@ def create_incident():
     flash("Incidente registrado correctamente.", "success")
     return redirect(url_for("home"))
 
+@app.route("/incidents/<int:incident_id>/close", methods=["POST"])
+def close_incident(incident_id):
+    with get_connection() as connection:
+        cursor = connection.execute(
+            """
+            UPDATE incidents
+            SET status = 'cerrado',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+              AND status = 'resuelto'
+            """,
+            (incident_id,),
+        )
+
+        if cursor.rowcount == 1:
+            flash("Incidente cerrado correctamente.", "success")
+        else:
+            flash(
+                "No se pudo cerrar el incidente. "
+                "Debe existir y estar en estado resuelto.",
+                "error",
+            )
+
+    return redirect(
+        url_for("incident_detail", incident_id=incident_id)
+    )
+
 @app.route("/devices", methods=["POST"])
 def create_device():
     device, error = validate_device_form()

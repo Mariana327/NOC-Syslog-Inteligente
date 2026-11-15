@@ -213,7 +213,15 @@
         id="resolution-form"
         action="{{ url_for('submit_incident_resolution', incident_id=incident['id']) }}"
         method="POST">
-
+<button
+    type="button"
+    id="autofill-resolution"
+    data-title="{{ incident['title'] | e }}"
+    data-description="{{ incident['description'] | e }}"
+    data-severity="{{ incident['severity'] }}"
+    data-source-ip="{{ incident['source_ip'] or 'No disponible' | e }}">
+    Autocompletar registro
+</button>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <label for="resolution_cause">Causa identificada:</label>
@@ -252,6 +260,32 @@
 
 {% endif %}
 
+{% if incident['status'] == 'resuelto' %}
+
+<div class="incident-detail-card">
+    <h3>Cierre del incidente</h3>
+
+    <p>
+        La resolución ya fue autorizada.
+        Puedes finalizar formalmente la gestión del incidente.
+    </p>
+
+    <form
+        action="{{ url_for('close_incident', incident_id=incident['id']) }}"
+        method="POST">
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token() }}">
+
+        <button type="submit">
+            Cerrar incidente
+        </button>
+    </form>
+</div>
+
+{% endif %}
             <div class="incident-status-message">
                 <strong>Seguimiento del incidente</strong>
                 <p>{{ status_message }}</p>
@@ -359,7 +393,31 @@ document.addEventListener("DOMContentLoaded", function () {
             submitAjax(reassignForm);
         });
     }
+const autofillButton = document.getElementById("autofill-resolution");
 
+if (autofillButton) {
+    autofillButton.addEventListener("click", function () {
+        const title = autofillButton.dataset.title;
+        const description = autofillButton.dataset.description;
+        const severity = autofillButton.dataset.severity;
+        const sourceIp = autofillButton.dataset.sourceIp;
+
+        document.getElementById("resolution_cause").value =
+            `Evento simulado relacionado con: ${title}. ${description}`;
+
+        document.getElementById("resolution_diagnosis").value =
+            `Se identificó un evento de severidad ${severity}, procedente de la dirección IP ${sourceIp}. Se realizó el análisis del registro Syslog en el entorno de simulación.`;
+
+        document.getElementById("corrective_action").value =
+            "Se verificó el registro del evento, su clasificación y el funcionamiento del mecanismo de generación de alertas. No se realizaron cambios reales en dispositivos de red.";
+
+        document.getElementById("verification_result").value =
+            "Prueba de simulación satisfactoria. Se verificó el registro del incidente en el sistema y el funcionamiento del flujo de notificaciones. La resolución queda pendiente de autorización.";
+
+        document.getElementById("resolution-feedback").textContent =
+            "Formulario autocompletado. Revisa la información antes de enviarla.";
+    });
+}
 const resolutionForm = document.getElementById("resolution-form");
 const resolutionFeedback = document.getElementById("resolution-feedback");
 
