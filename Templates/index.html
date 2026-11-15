@@ -289,56 +289,34 @@
 }
 
     </style>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
 </head>
 <body>
 {% if not request.args.get('embedded') %}
     <!-- Aquí va el menú completo -->
 {% endif %}
 
-<div style="height:76px;"></div>
+<header class="noc-header">
+    <div class="noc-brand">
+        <div class="noc-logo">
+            <span>⌘</span>
+        </div>
 
-<h1>NOC Syslog Inteligente</h1>
-<p>MVP v0.2.0 | Inventario de dispositivos de red</p>
-{% if not request.args.get('embedded') %}
+        <div class="noc-brand-text">
+            <h1>NOC SYSLOG INTELIGENTE</h1>
+            <p>NETWORK OPERATIONS & SECURITY CENTER</p>
+        </div>
+    </div>
 
-<nav aria-label="Navegación de herramientas NOC"
-     style="display:flex;
-            flex-direction:row;
-            flex-wrap:wrap;
-            align-items:center;
-            gap:12px;
-            margin:0;
-            padding:12px 20px;
-            position:fixed;
-            top:0;
-            left:0;
-            right:0;
-            z-index:1000;
-            background:#f1f5f9;
-            box-shadow:0 2px 8px rgba(0,0,0,0.15);">
-
-    <a href="{{ url_for('home') }}" data-view="dashboard"
-       style="display:inline-block; padding:12px 20px; background:#1e293b; color:white; text-decoration:none; border-radius:8px; white-space:nowrap;">
-        Dashboard e inventario
-    </a>
-
-    <a href="{{ url_for('consola_simulada') }}?embedded=1" data-view="externo"
-       style="display:inline-block; padding:12px 20px; background:#2563eb; color:white; text-decoration:none; border-radius:8px; white-space:nowrap;">
-        Consola simulada
-    </a>
-
-    <a href="{{ url_for('configuraciones') }}?embedded=1" data-view="externo"
-       style="display:inline-block; padding:12px 20px; background:#0f766e; color:white; text-decoration:none; border-radius:8px; white-space:nowrap;">
-        Configuraciones por fabricante
-    </a>
-
-    <a href="{{ url_for('politicas_ia') }}?embedded=1" data-view="externo"
-       style="display:inline-block; padding:12px 20px; background:#7c3aed; color:white; text-decoration:none; border-radius:8px; white-space:nowrap;">
-        Políticas de IA
-    </a>
-
-</nav>
-{% endif %}
+    <div class="noc-header-status">
+        <span class="status-indicator"></span>
+        <span>SISTEMA DE MONITOREO</span>
+        <span class="noc-version">MVP v0.2.0</span>
+    </div>
+</header>
 
 <div id="contenido-externo"
      style="display:none; width:100%;">
@@ -354,30 +332,112 @@
 </div>
 <div class="dashboard-layout">
 
-    <aside class="dashboard-sidebar">
-        <h2>Menú del Dashboard</h2>
+    
+
+<aside class="dashboard-sidebar">
+
+    <h2>
+        <span class="sidebar-title-icon">⌘</span>
+        <span class="sidebar-title-text">Menú del Dashboard</span>
+    </h2>
+
+    <div class="sidebar-group">
+        <p class="sidebar-label">OPERACIÓN PRINCIPAL</p>
 
         <button type="button"
                 class="dashboard-menu-button active"
-                data-section="dispositivos">
-            Dispositivos
+                data-section="dispositivos"
+                title="Dispositivos">
+            <span class="sidebar-icon">▣</span>
+            <span class="sidebar-text">Dispositivos</span>
         </button>
 
         <button type="button"
                 class="dashboard-menu-button"
-                data-section="incidentes">
-            Incidentes
+                data-section="incidentes"
+                title="Incidentes">
+            <span class="sidebar-icon">⚠</span>
+            <span class="sidebar-text">Incidentes</span>
         </button>
 
         <button type="button"
                 class="dashboard-menu-button"
-                data-section="eventos">
-            Eventos Syslog
+                data-section="eventos"
+                title="Eventos Syslog">
+            <span class="sidebar-icon">⌁</span>
+            <span class="sidebar-text">Eventos Syslog</span>
         </button>
-    </aside>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-group">
+        <p class="sidebar-label">HERRAMIENTAS Y CONFIGURACIÓN</p>
+
+        <a class="dashboard-menu-button"
+           data-view="externo"
+           href="{{ url_for('consola_simulada') }}?embedded=1"
+           title="Consola simulada">
+            <span class="sidebar-icon">⌨</span>
+            <span class="sidebar-text">Consola simulada</span>
+        </a>
+
+       
+<div class="dashboard-menu-group" id="menu-configuraciones">
+
+    <button
+        type="button"
+        class="dashboard-menu-button"
+        id="btn-configuraciones"
+        title="Configuraciones por fabricante"
+        aria-expanded="false">
+
+        <span class="sidebar-icon">⚙</span>
+        <span class="sidebar-text">Configuraciones por fabricante</span>
+        <span class="sidebar-arrow">⌄</span>
+    </button>
+
+    <div class="dashboard-submenu" id="submenu-configuraciones" hidden>
+
+        <a href="{{ url_for('configuraciones') }}?embedded=1&fabricante=Cisco"
+           class="dashboard-submenu-button dashboard-menu-button"
+           data-view="externo"
+           data-fabricante="Cisco">
+            Cisco
+        </a>
+
+        <a href="{{ url_for('configuraciones') }}?embedded=1&fabricante=Fortinet"
+           class="dashboard-submenu-button dashboard-menu-button"
+           data-view="externo"
+           data-fabricante="Fortinet">
+            Fortinet
+        </a>
+
+        <a href="{{ url_for('configuraciones') }}?embedded=1&fabricante=Huawei"
+           class="dashboard-submenu-button dashboard-menu-button"
+           data-view="externo"
+           data-fabricante="Huawei">
+            Huawei
+        </a>
+
+    </div>
+</div>
+
+        <a class="dashboard-menu-button"
+           data-view="externo"
+           href="{{ url_for('politicas_ia') }}?embedded=1"
+           title="Políticas de IA">
+            <span class="sidebar-icon">⬡</span>
+            <span class="sidebar-text">Políticas de IA</span>
+        </a>
+    </div>
+
+</aside>
 
     <main class="dashboard-content">
-
+    <div class="dashboard-section" id="vista-herramienta" hidden>
+     <div id="contenido-herramienta"></div>
+    </div>
     {% for category, message in get_flashed_messages(with_categories=true) %}
         <div class="panel messages {{ category }}">{{ message }}</div>
  
@@ -654,6 +714,7 @@
                         <th>IP de origen</th>
                         <th>Responsable</th>
                         <th>Fecha de creación</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -667,34 +728,20 @@
                                 </span>
                             </td>
                             <td>
-    <form action="{{ url_for('update_incident_status', incident_id=incident['id']) }}"
-          method="post" class="status-form">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-        <select name="status" aria-label="Estado del incidente">
-            <option value="abierto"
-                {% if incident["status"] == "abierto" %}selected{% endif %}>
-                Abierto
-            </option>
-            <option value="en_progreso"
-                {% if incident["status"] == "en_progreso" %}selected{% endif %}>
-                En progreso
-            </option>
-            <option value="resuelto"
-                {% if incident["status"] == "resuelto" %}selected{% endif %}>
-                Resuelto
-            </option>
-            <option value="cerrado"
-                {% if incident["status"] == "cerrado" %}selected{% endif %}>
-                Cerrado
-            </option>
-        </select>
-        <button type="submit">Actualizar</button>
-    </form>
+    <span class="incident-status">
+        {{ incident['status'] | replace('_', ' ') | title }}
+    </span>
 </td>
+
                             <td>{{ incident["source_ip"] or "—" }}</td>
                             <td>{{ incident["assigned_to"] or "—" }}</td>
                             <td>{{ incident["created_at"] }}</td>
+                            <td>
+                                <a href="{{ url_for('incident_detail', incident_id=incident['id']) }}"
+                                class="btn-detail">
+                                Ver detalle
+                                </a>
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -809,6 +856,54 @@
         <h3>Advertencias e información</h3>
         <p>{{ event_stats["other_events"] or 0 }}</p>
     </div>
+    </div>
+<div class="severity-overview">
+
+    <h3>Distribución de eventos por severidad</h3>
+
+    <div class="severity-grid">
+
+        <div class="severity-card severity-0">
+            <span>0 - Emergencia</span>
+            <strong>{{ event_stats["severity_0"] or 0 }}</strong>
+        </div>
+
+        <div class="severity-card severity-1">
+            <span>1 - Alerta</span>
+            <strong>{{ event_stats["severity_1"] or 0 }}</strong>
+        </div>
+
+        <div class="severity-card severity-2">
+            <span>2 - Crítico</span>
+            <strong>{{ event_stats["severity_2"] or 0 }}</strong>
+        </div>
+
+        <div class="severity-card severity-3">
+            <span>3 - Error</span>
+            <strong>{{ event_stats["severity_3"] or 0 }}</strong>
+        </div>
+
+        <div class="severity-card severity-4">
+            <span>4 - Advertencia</span>
+            <strong>{{ event_stats["severity_4"] or 0 }}</strong>
+        </div>
+
+        <div class="severity-card severity-5">
+            <span>5 - Aviso</span>
+            <strong>{{ event_stats["severity_5"] or 0 }}</strong>
+        </div>
+
+        <div class="severity-card severity-6">
+            <span>6 - Informativo</span>
+            <strong>{{ event_stats["severity_6"] or 0 }}</strong>
+        </div>
+
+        <div class="severity-card severity-7">
+            <span>7 - Depuración</span>
+            <strong>{{ event_stats["severity_7"] or 0 }}</strong>
+        </div>
+
+    </div>
 </div>
 
     {% if syslog_events %}
@@ -901,14 +996,16 @@ function mostrarVista(destino) {
 const vistaGuardada = sessionStorage.getItem("vistaDashboard");
 mostrarVista(vistaGuardada || "dispositivos");
 
-// Escuchar los cambios del menú.
-document.querySelectorAll(".dashboard-menu-button").forEach(function (boton) {
+// Escuchar únicamente las opciones internas del Dashboard.
+document.querySelectorAll(
+    '.dashboard-menu-button[data-section]'
+).forEach(function (boton) {
     boton.addEventListener("click", function () {
         mostrarVista(boton.dataset.section);
     });
 });
 
-    // Evitar actualizaciones mientras el usuario utiliza formularios.
+// Evitar actualizaciones mientras el usuario utiliza formularios.
     let usandoFormulario = false;
 
     document.addEventListener("focusin", function (event) {
@@ -1063,10 +1160,11 @@ async function actualizarSeccion(url, secciones) {
 
     // Actualización automática cada 5 segundos, sin recargar toda la página.
     setInterval(async function () {
-        if (usandoFormulario) {
-            return;
-        }
+    const vistaHerramienta = document.getElementById("vista-herramienta");
 
+    if (usandoFormulario || (vistaHerramienta && !vistaHerramienta.hidden)) {
+        return;
+    }
         try {
             await actualizarSeccion(
                 window.location.href,
@@ -1109,30 +1207,63 @@ async function actualizarSeccion(url, secciones) {
         }
     });
 
-// Navegación del menú superior sin abandonar la página.
+</script>
+<script>
 document.querySelectorAll(
-    'nav[aria-label="Navegación de herramientas NOC"] a[data-view]'
+    '.dashboard-sidebar a.dashboard-menu-button[data-view="externo"]'
 ).forEach(function (enlace) {
-
-    enlace.addEventListener("click", function (evento) {
+    enlace.addEventListener("click", async function (evento) {
         evento.preventDefault();
+        console.log("Clic interceptado: ", enlace.href);
 
-        const dashboard = document.querySelector(".dashboard-layout");
-        const contenido = document.getElementById("contenido-externo");
-        const visor = document.getElementById("visor-secciones");
+        const secciones = document.querySelectorAll(".dashboard-section");
+        const vistaHerramienta = document.getElementById("vista-herramienta");
+        const contenido = document.getElementById("contenido-herramienta");
 
-        if (enlace.dataset.view === "dashboard") {
-            contenido.style.display = "none";
-            dashboard.style.display = "";
-            visor.src = "about:blank";
-        } else {
-            dashboard.style.display = "none";
-            contenido.style.display = "block";
-            visor.src = enlace.href;
+        secciones.forEach(function (seccion) {
+            seccion.hidden = true;
+        });
+
+        vistaHerramienta.hidden = false;
+
+        document.querySelectorAll(".dashboard-menu-button").forEach(function (elemento) {
+            elemento.classList.remove("active");
+        });
+
+        enlace.classList.add("active");
+        contenido.innerHTML = "<p>Cargando herramienta...</p>";
+
+        try {
+            const respuesta = await fetch(enlace.href);
+
+            if (!respuesta.ok) {
+                throw new Error("No se pudo cargar la herramienta.");
+            }
+
+            contenido.innerHTML = await respuesta.text();
+            console.log("Herramienta cargada dentro del panel:", contenido.innerHTML.length);
+        } catch (error) {
+            contenido.innerHTML =
+                "<p>No fue posible cargar la herramienta. Intenta nuevamente.</p>";
+            console.error(error);
         }
     });
 });
+</script>
+<script src="{{ url_for('static', filename='js/consola.js') }}"></script>
 
+<script>
+document.getElementById("btn-configuraciones").addEventListener("click", function () {
+    const grupo = document.getElementById("menu-configuraciones");
+    const submenu = document.getElementById("submenu-configuraciones");
+
+    const estaAbierto = !submenu.hidden;
+
+    submenu.hidden = estaAbierto;
+    grupo.classList.toggle("open", !estaAbierto);
+
+    this.setAttribute("aria-expanded", String(!estaAbierto));
+});
 </script>
 </body>
 </html>

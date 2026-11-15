@@ -1,0 +1,404 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del incidente | NOC Syslog Inteligente</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .incident-detail {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 28px;
+        }
+
+        .incident-detail h1 {
+            color: var(--violet-light);
+            margin-bottom: 10px;
+        }
+
+        .incident-detail-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .incident-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px;
+        }
+
+        .incident-detail-item {
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .incident-detail-item strong {
+            display: block;
+            color: var(--violet-light);
+            margin-bottom: 8px;
+        }
+
+        .incident-description {
+            white-space: pre-wrap;
+            line-height: 1.7;
+        }
+
+        .incident-status-message {
+            margin-top: 22px;
+            padding: 18px;
+            border-left: 4px solid var(--cyan);
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+
+        .incident-back {
+            display: inline-block;
+            margin-top: 24px;
+            color: var(--cyan);
+            text-decoration: none;
+        }
+
+        @media (max-width: 600px) {
+            .incident-detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .incident-detail {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="incident-detail">
+
+        <h1>Detalle del incidente #{{ incident["id"] }}</h1>
+        <p>Información y seguimiento del incidente registrado.</p>
+
+        <section class="incident-detail-card">
+
+            <h2>{{ incident["title"] }}</h2>
+
+            <div class="incident-detail-grid">
+
+                <div class="incident-detail-item">
+                    <strong>Severidad</strong>
+                    {{ incident["severity"] }}
+                </div>
+
+                <div class="incident-detail-item">
+                    <strong>Estado</strong>
+                    <span id="incident-status">
+                     {{ incident["status"] | replace("_", " ") | title }}
+                    </span>
+                </div>
+
+                <div class="incident-detail-item">
+                    <strong>IP de origen</strong>
+                    {{ incident["source_ip"] or "No disponible" }}
+                </div>
+
+                <div class="incident-detail-item">
+                    <strong>Responsable</strong>
+                    <span id="incident-responsible">
+                        {{ incident["assigned_to"] or "Sin asignar" }}
+                    </span>
+                </div>
+
+                <div class="incident-detail-item">
+                    <strong>Fecha de creación</strong>
+                    {{ incident["created_at"] }}
+                </div>
+
+                <div class="incident-detail-item">
+                    <strong>Última actualización</strong>
+                    {{ incident["updated_at"] }}
+                </div>
+
+                <div class="incident-detail-item">
+                    <strong>Fecha de resolución o cierre</strong>
+                    {{ incident["resolved_at"] or "No registrada" }}
+                </div>
+
+            </div>
+
+            <div class="incident-detail-card">
+                <h3>Descripción</h3>
+                <p class="incident-description">{{ incident["description"] }}</p>
+            </div>
+
+<div class="incident-detail-card" id="asignacion-responsable">
+    <h3>Asignación de responsable</h3>
+
+    <p>
+        <strong>Responsable actual:</strong>
+        <span id="assignment-responsible">
+    {{ incident['assigned_to'] or 'Pendiente de asignación' }}
+</span>
+    </p>
+
+    <p
+    id="assignment-confirmation-status"
+    class="{{ 'status-confirmed' if incident['responsible_confirmed'] == 1 else 'status-pending' }}">
+    {{ 'Responsable confirmado' if incident['responsible_confirmed'] == 1 else 'Pendiente de confirmación' }}
+</p>
+
+<form
+    id="confirm-responsible-form"
+    action="{{ url_for('confirm_incident_responsible', incident_id=incident['id']) }}"
+    method="POST"
+    {% if incident['responsible_confirmed'] == 1 %}hidden{% endif %}>
+
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <button type="submit">
+        Confirmar responsable
+    </button>
+</form>
+
+    <hr>
+
+    <h4>Solicitar reasignación</h4>
+
+    <form
+      id="reassign-responsible-form"
+      action="{{ url_for('reassign_incident_responsible', incident_id=incident['id']) }}"
+      method="POST">
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="assigned_to">
+            Selecciona el nuevo responsable:
+        </label>
+
+        <select id="assigned_to" name="assigned_to" required>
+            <option value="">Seleccionar responsable</option>
+            <option value="Administrador NOC">Administrador NOC</option>
+            <option value="Analista de redes">Analista de redes</option>
+            <option value="Técnico de infraestructura">Técnico de infraestructura</option>
+            <option value="Técnico de redes">Técnico de redes</option>
+        </select>
+
+        <button type="submit">
+            Solicitar reasignación
+        </button>
+    </form>
+    <p id="assignment-feedback" role="status" aria-live="polite"></p>
+</div>
+
+{% if incident['status'] == 'en_progreso' and incident['responsible_confirmed'] == 1 %}
+
+<div class="incident-detail-card" id="registro-resolucion">
+
+    <h3>Registro de resolución</h3>
+
+    <p>
+        Completa la información de las actividades realizadas
+        para solicitar la aprobación de la resolución.
+    </p>
+
+    <form
+        id="resolution-form"
+        action="{{ url_for('submit_incident_resolution', incident_id=incident['id']) }}"
+        method="POST">
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="resolution_cause">Causa identificada:</label>
+        <textarea
+            id="resolution_cause"
+            name="resolution_cause"
+            required></textarea>
+
+        <label for="resolution_diagnosis">Diagnóstico realizado:</label>
+        <textarea
+            id="resolution_diagnosis"
+            name="resolution_diagnosis"
+            required></textarea>
+
+        <label for="corrective_action">Acción correctiva aplicada:</label>
+        <textarea
+            id="corrective_action"
+            name="corrective_action"
+            required></textarea>
+
+        <label for="verification_result">Resultado de la verificación:</label>
+        <textarea
+            id="verification_result"
+            name="verification_result"
+            required></textarea>
+
+        <button type="submit">
+            Enviar registro a Telegram
+        </button>
+
+    </form>
+
+    <p id="resolution-feedback" role="status" aria-live="polite"></p>
+
+</div>
+
+{% endif %}
+
+            <div class="incident-status-message">
+                <strong>Seguimiento del incidente</strong>
+                <p>{{ status_message }}</p>
+            </div>
+
+        </section>
+
+        <a class="incident-back"
+           href="{{ url_for('home') }}#seccion-incidentes">
+            ← Volver a incidentes
+        </a>
+
+    </main>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const confirmForm = document.getElementById("confirm-responsible-form");
+    const reassignForm = document.getElementById("reassign-responsible-form");
+
+    const responsible = document.getElementById("incident-responsible");
+    const status = document.getElementById("incident-status");
+    const currentResponsible = document.getElementById("assignment-responsible");
+    const confirmationStatus = document.getElementById("assignment-confirmation-status");
+    const feedback = document.getElementById("assignment-feedback");
+    const followupMessage = document.getElementById("incident-followup-message");
+
+    const statusMessages = {
+        abierto: "Incidente registrado. Está pendiente de revisión y asignación de acciones.",
+        en_progreso: "El incidente está siendo atendido. Se debe continuar con el diagnóstico y la solución.",
+        resuelto: "Se ha registrado una solución. Se recomienda verificar que el servicio funcione correctamente.",
+        cerrado: "La gestión del incidente ha finalizado. El caso queda disponible para consulta."
+    };
+
+    function formatStatus(value) {
+        return value.replaceAll("_", " ")
+            .replace(/\b\w/g, letter => letter.toUpperCase());
+    }
+
+    async function submitAjax(form) {
+        feedback.textContent = "";
+
+        const button = form.querySelector('button[type="submit"]');
+        const originalText = button.textContent;
+
+        button.disabled = true;
+
+        try {
+            const response = await fetch(form.action, {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: new FormData(form)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "No se pudo completar la operación.");
+            }
+
+            responsible.textContent = data.assigned_to || "Sin asignar";
+            currentResponsible.textContent = data.assigned_to || "Pendiente de asignación";
+            status.textContent = formatStatus(data.status);
+
+            const confirmed = data.responsible_confirmed === 1;
+
+            confirmationStatus.textContent = confirmed
+                ? "Responsable confirmado"
+                : "Pendiente de confirmación";
+
+            confirmationStatus.className = confirmed
+                ? "status-confirmed"
+                : "status-pending";
+
+            confirmForm.hidden = confirmed;
+
+            if (followupMessage) {
+                followupMessage.textContent = statusMessages[data.status] || "";
+            }
+
+            if (reassignForm) {
+                reassignForm.reset();
+            }
+
+            feedback.textContent = data.message;
+
+        } catch (error) {
+            feedback.textContent = error.message;
+        } finally {
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    }
+
+    if (confirmForm) {
+        confirmForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+            submitAjax(confirmForm);
+        });
+    }
+
+    if (reassignForm) {
+        reassignForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+            submitAjax(reassignForm);
+        });
+    }
+
+const resolutionForm = document.getElementById("resolution-form");
+const resolutionFeedback = document.getElementById("resolution-feedback");
+
+if (resolutionForm) {
+    resolutionForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const button = resolutionForm.querySelector('button[type="submit"]');
+        button.disabled = true;
+        resolutionFeedback.textContent = "Enviando registro a Telegram...";
+
+        try {
+            const response = await fetch(resolutionForm.action, {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: new FormData(resolutionForm)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "No se pudo enviar el registro.");
+            }
+
+            resolutionFeedback.textContent = data.message;
+            resolutionForm.reset();
+            button.textContent = "Registro enviado";
+
+        } catch (error) {
+            resolutionFeedback.textContent = error.message;
+            button.disabled = false;
+        }
+    });
+}
+
+});
+</script>
+
+</body>
+</html>
