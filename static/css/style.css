@@ -1,0 +1,1364 @@
+
+/* =========================================
+   NOC SYSLOG INTELIGENTE
+   Identidad visual: Cyberpunk Violet
+   ========================================= */
+
+:root {
+    --bg-main: #090713;
+    --bg-secondary: #100d20;
+    --bg-panel: #17122b;
+    --bg-panel-hover: #211a3a;
+
+    --violet: #9b5cff;
+    --violet-light: #bd91ff;
+    --violet-dark: #6936c9;
+
+    --cyan: #39e6f2;
+    --green: #48e0a4;
+    --orange: #ffad5c;
+    --red: #ff557c;
+
+    --text-main: #f2edff;
+    --text-muted: #a79bbf;
+
+    --border: rgba(169, 112, 255, 0.22);
+    --shadow: 0 0 24px rgba(155, 92, 255, 0.12);
+
+    --radius: 14px;
+}
+
+/* Reinicio general */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(
+            circle at 15% 10%,
+            rgba(105, 54, 201, 0.16),
+            transparent 32%
+        ),
+        radial-gradient(
+            circle at 85% 85%,
+            rgba(57, 230, 242, 0.07),
+            transparent 30%
+        ),
+        var(--bg-main);
+
+    color: var(--text-main);
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* Encabezados */
+h1, h2, h3, h4 {
+    color: var(--text-main);
+    letter-spacing: 0.4px;
+}
+
+h1 {
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    text-shadow: 0 0 16px rgba(155, 92, 255, 0.35);
+}
+
+/* Texto */
+p, label, span {
+    line-height: 1.5;
+}
+
+small {
+    color: var(--text-muted);
+}
+
+/* Enlaces */
+a {
+    color: var(--violet-light);
+    text-decoration: none;
+    transition: 0.2s ease;
+}
+
+a:hover {
+    color: var(--cyan);
+}
+
+/* Paneles y tarjetas */
+.card,
+.panel,
+.tarjeta,
+.stat-card,
+.dashboard-card {
+    background: linear-gradient(
+        145deg,
+        rgba(30, 23, 52, 0.96),
+        rgba(17, 13, 33, 0.96)
+    );
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+
+    box-shadow: var(--shadow);
+    transition: transform 0.25s ease, border-color 0.25s ease;
+}
+
+.card:hover,
+.panel:hover,
+.tarjeta:hover,
+.stat-card:hover,
+.dashboard-card:hover {
+    border-color: rgba(155, 92, 255, 0.55);
+    transform: translateY(-2px);
+}
+
+/* Botones */
+button,
+.btn {
+    border: 1px solid transparent;
+    border-radius: 9px;
+    padding: 10px 17px;
+
+    background: linear-gradient(
+        110deg,
+        var(--violet-dark),
+        var(--violet)
+    );
+
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+button:hover,
+.btn:hover {
+    box-shadow: 0 0 18px rgba(155, 92, 255, 0.45);
+    filter: brightness(1.15);
+    transform: translateY(-1px);
+}
+
+/* Campos de formulario */
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 11px 13px;
+
+    background: #0d0a19;
+    color: var(--text-main);
+
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    outline: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--violet);
+    box-shadow: 0 0 12px rgba(155, 92, 255, 0.22);
+}
+
+/* Tablas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text-main);
+}
+
+th {
+    background: #211738;
+    color: var(--violet-light);
+    text-align: left;
+}
+
+th, td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+tr:hover td {
+    background: rgba(155, 92, 255, 0.07);
+}
+
+/* Etiquetas de estado */
+.badge,
+.estado {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.success {
+    color: var(--green);
+    background: rgba(72, 224, 164, 0.12);
+}
+
+.warning {
+    color: var(--orange);
+    background: rgba(255, 173, 92, 0.12);
+}
+
+.danger {
+    color: var(--red);
+    background: rgba(255, 85, 124, 0.12);
+}
+
+/* Separadores */
+hr {
+    border: 0;
+    border-top: 1px solid var(--border);
+}
+
+/* Selección de texto */
+::selection {
+    background: var(--violet);
+    color: white;
+}
+
+/* =========================================
+   CORRECCIÓN DE PANELES Y TARJETAS
+   ========================================= */
+
+/* Paneles generales */
+.panel,
+.summary-card,
+.stat-card,
+.incident-summary,
+.card,
+.dashboard-content,
+.dashboard-section {
+    background-color: var(--bg-panel);
+    color: var(--text-main);
+    border-color: var(--border);
+}
+
+/* Tarjetas de incidentes */
+.summary-card {
+    background: linear-gradient(
+        145deg,
+        #211738,
+        #151027
+    );
+    border-left: 4px solid var(--violet);
+    box-shadow: var(--shadow);
+}
+
+.summary-card h3 {
+    color: var(--violet-light);
+}
+
+.summary-card p {
+    color: var(--text-main);
+}
+
+/* Tarjetas de estadísticas */
+.stat-card {
+    background: linear-gradient(
+        145deg,
+        #211738,
+        #151027
+    );
+    border: 1px solid var(--border);
+}
+
+.stat-card h3 {
+    color: var(--text-muted);
+}
+
+.stat-card p {
+    color: var(--text-main);
+}
+
+/* Contenedores de tablas */
+.table-wrap {
+    background: var(--bg-panel);
+    border-radius: var(--radius);
+    overflow-x: auto;
+}
+
+/* Tablas de inventario y eventos */
+table {
+    background: var(--bg-panel);
+    color: var(--text-main);
+}
+
+th {
+    background: #281b43;
+    color: var(--violet-light);
+}
+
+td {
+    color: var(--text-main);
+    border-color: var(--border);
+}
+
+/* Filas de las tablas */
+tbody tr:nth-child(even) {
+    background: rgba(155, 92, 255, 0.045);
+}
+
+tbody tr:hover {
+    background: rgba(155, 92, 255, 0.12);
+}
+
+/* Textos secundarios */
+.empty {
+    color: var(--text-muted);
+}
+
+/* =========================================
+   NAVEGACIÓN LATERAL CYBERPUNK
+   ========================================= */
+
+.dashboard-layout {
+    display: grid;
+    grid-template-columns: 245px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+    width: 100%;
+}
+
+/* Barra lateral */
+.dashboard-sidebar {
+    position: sticky;
+    top: 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+
+    padding: 22px 15px;
+    margin: 0;
+
+    background: linear-gradient(
+        180deg,
+        #1c1432,
+        #100c20
+    );
+
+    border: 1px solid rgba(155, 92, 255, 0.35);
+    border-radius: 16px;
+
+    box-shadow:
+        0 0 25px rgba(155, 92, 255, 0.12),
+        inset 0 0 20px rgba(155, 92, 255, 0.04);
+}
+
+/* Nombre del menú */
+.dashboard-sidebar h2 {
+    margin: 0 0 15px;
+    padding-bottom: 17px;
+
+    color: var(--violet-light);
+    font-size: 17px;
+    text-align: center;
+
+    border-bottom: 1px solid var(--border);
+    text-shadow: 0 0 12px rgba(155, 92, 255, 0.4);
+}
+
+/* Botones de navegación */
+.dashboard-menu-button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    width: 100%;
+    margin: 0;
+    padding: 13px 15px;
+
+    background: transparent;
+    color: var(--text-muted);
+
+    border: 1px solid transparent;
+    border-radius: 10px;
+
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+
+    transition: all 0.25s ease;
+}
+
+/* Efecto al pasar el cursor */
+.dashboard-menu-button:hover {
+    background: rgba(155, 92, 255, 0.12);
+    color: white;
+    border-color: var(--border);
+    transform: translateX(3px);
+    box-shadow: none;
+}
+
+/* Sección seleccionada */
+.dashboard-menu-button.active {
+    background: linear-gradient(
+        100deg,
+        rgba(105, 54, 201, 0.8),
+        rgba(155, 92, 255, 0.3)
+    );
+
+    color: white;
+    border-color: var(--violet);
+
+    box-shadow:
+        0 0 15px rgba(155, 92, 255, 0.2),
+        inset 3px 0 0 var(--cyan);
+}
+
+/* Área principal */
+.dashboard-content {
+    min-width: 0;
+    width: 100%;
+}
+
+/* Adaptación a pantallas pequeñas */
+@media (max-width: 850px) {
+    .dashboard-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-sidebar {
+        position: static;
+    }
+
+    .dashboard-sidebar h2 {
+        text-align: left;
+    }
+}
+
+@media (max-width: 550px) {
+    .dashboard-sidebar {
+        padding: 15px;
+    }
+
+    .dashboard-menu-button {
+        padding: 11px;
+    }
+}
+
+/* =========================================
+   IDENTIDAD DE MARCA NOC
+   ========================================= */
+
+.noc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 18px;
+
+    margin: 0 0 28px;
+    padding: 22px 26px;
+
+    background: linear-gradient(
+        110deg,
+        #1c1432,
+        #100c20 70%,
+        #19102c
+    );
+
+    border: 1px solid var(--border);
+    border-radius: 16px;
+
+    box-shadow:
+        0 0 25px rgba(155, 92, 255, 0.12),
+        inset 0 -2px 0 rgba(57, 230, 242, 0.3);
+}
+
+.noc-brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.noc-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 55px;
+    height: 55px;
+
+    background: linear-gradient(
+        135deg,
+        var(--violet-dark),
+        var(--violet)
+    );
+
+    border: 1px solid var(--violet-light);
+    border-radius: 14px;
+
+    box-shadow: 0 0 20px rgba(155, 92, 255, 0.35);
+}
+
+.noc-logo span {
+    color: white;
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.noc-brand-text h1 {
+    margin: 0;
+    color: var(--text-main);
+    font-size: clamp(18px, 2.5vw, 25px);
+    letter-spacing: 1.5px;
+}
+
+.noc-brand-text p {
+    margin: 7px 0 0;
+    color: var(--violet-light);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.noc-header-status {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+}
+
+.status-indicator {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 12px var(--green);
+}
+
+.noc-version {
+    padding: 6px 10px;
+    color: var(--violet-light);
+    background: rgba(155, 92, 255, 0.12);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+}
+
+@media (max-width: 650px) {
+    .noc-header {
+        padding: 17px;
+    }
+
+    .noc-header-status {
+        padding-left: 2px;
+    }
+}
+
+/* =========================================
+   ENLACES DEL MENÚ LATERAL
+   ========================================= */
+
+.sidebar-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sidebar-label {
+    margin: 8px 0 5px;
+    color: var(--violet-light);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+}
+
+.sidebar-divider {
+    height: 1px;
+    margin: 22px 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--violet),
+        var(--cyan),
+        transparent
+    );
+    opacity: 0.65;
+}
+
+.dashboard-sidebar a.dashboard-menu-button {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    color: var(--text-muted);
+    text-decoration: none;
+    text-align: left;
+    font: inherit;
+}
+
+.dashboard-sidebar a.dashboard-menu-button:hover {
+    color: var(--text-main);
+    text-decoration: none;
+}
+
+/* =========================================
+   MENÚ LATERAL RETRÁCTIL
+   ========================================= */
+
+/* Reservar espacio únicamente para el menú contraído */
+.dashboard-layout {
+    grid-template-columns: 64px minmax(0, 1fr);
+}
+
+/* Estado contraído */
+.dashboard-sidebar {
+    position: sticky;
+    top: 20px;
+    z-index: 100;
+
+    width: 64px;
+    box-sizing: border-box;
+    padding: 22px 7px;
+
+    overflow: hidden;
+    transition: width 0.3s ease, padding 0.3s ease;
+}
+
+/* Despliegue sin mover el contenido principal */
+.dashboard-sidebar:hover,
+.dashboard-sidebar:focus-within {
+    width: 245px;
+    padding: 22px 15px;
+}
+
+/* Ocultar los textos mientras está contraído */
+.sidebar-title-text,
+.sidebar-text,
+.sidebar-label {
+    display: none;
+}
+
+/* Mostrar los textos al desplegar el menú */
+.dashboard-sidebar:hover .sidebar-title-text,
+.dashboard-sidebar:hover .sidebar-text,
+.dashboard-sidebar:hover .sidebar-label,
+.dashboard-sidebar:focus-within .sidebar-title-text,
+.dashboard-sidebar:focus-within .sidebar-text,
+.dashboard-sidebar:focus-within .sidebar-label {
+    display: inline;
+}
+
+.dashboard-sidebar:hover .sidebar-title-text,
+.dashboard-sidebar:hover .sidebar-text,
+.dashboard-sidebar:hover .sidebar-label,
+.dashboard-sidebar:focus-within .sidebar-title-text,
+.dashboard-sidebar:focus-within .sidebar-text,
+.dashboard-sidebar:focus-within .sidebar-label {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Título */
+.dashboard-sidebar h2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 32px;
+    white-space: nowrap;
+}
+
+.dashboard-sidebar:hover h2,
+.dashboard-sidebar:focus-within h2 {
+    justify-content: flex-start;
+}
+
+.sidebar-title-icon {
+    color: var(--cyan);
+    font-size: 23px;
+    flex-shrink: 0;
+}
+
+/* Grupos y separador */
+.sidebar-group {
+    gap: 10px;
+}
+
+.sidebar-label {
+    overflow: hidden;
+}
+
+.sidebar-divider {
+    margin: 18px 0;
+}
+
+/* Botones e iconos */
+.dashboard-menu-button {
+    justify-content: center;
+    gap: 13px;
+    min-height: 46px;
+    padding: 11px 10px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.dashboard-sidebar:hover .dashboard-menu-button,
+.dashboard-sidebar:focus-within .dashboard-menu-button {
+    justify-content: flex-start;
+}
+
+.sidebar-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 24px;
+    width: 24px;
+    font-size: 21px;
+    color: var(--violet-light);
+}
+
+.dashboard-menu-button:hover .sidebar-icon,
+.dashboard-menu-button.active .sidebar-icon {
+    color: var(--cyan);
+}
+
+/* Evitar que el menú empuje el contenido */
+.dashboard-content {
+    min-width: 0;
+}
+
+/* En pantallas pequeñas mantener el menú compacto */
+@media (max-width: 850px) {
+    .dashboard-layout {
+        grid-template-columns: 64px minmax(0, 1fr);
+    }
+
+    .dashboard-sidebar:hover,
+    .dashboard-sidebar:focus-within {
+        width: 220px;
+    }
+}
+
+/* =========================================
+   AJUSTE DE OPCIONES DEL MENÚ RETRÁCTIL
+   ========================================= */
+
+/* Evitar que el resaltado llegue al borde del menú */
+.dashboard-sidebar .dashboard-menu-button {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Dar espacio al resaltado dentro del menú desplegado */
+.dashboard-sidebar:hover .dashboard-menu-button,
+.dashboard-sidebar:focus-within .dashboard-menu-button {
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+/* Permitir que los nombres largos se lean completos */
+.dashboard-sidebar:hover .sidebar-text,
+.dashboard-sidebar:focus-within .sidebar-text {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.35;
+}
+
+/* Evitar que los iconos se deformen */
+.sidebar-icon {
+    flex-shrink: 0;
+}
+
+/* CONSOLA SIMULADA - TEMA CYBERPUNK */
+
+.console-module {
+    width: 100%;
+    color: var(--text-main);
+}
+
+.console-module h1 {
+    color: var(--violet-light);
+    margin-bottom: 8px;
+}
+
+.console-module > p {
+    color: var(--text-muted);
+}
+
+.console-module .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    color: var(--text-main);
+    padding: 24px;
+    margin: 20px 0;
+}
+
+.console-module .aviso {
+    background: rgba(155, 92, 255, 0.12);
+    border: 1px solid var(--violet);
+    border-radius: 10px;
+    padding: 16px;
+    color: var(--violet-light);
+}
+
+.console-module .permitido {
+    border-left: 4px solid var(--green);
+}
+
+.console-module .bloqueado {
+    border-left: 4px solid var(--red);
+}
+
+.console-module li {
+    margin: 14px 0;
+    color: var(--text-main);
+}
+
+.console-module code {
+    color: var(--cyan);
+}
+
+.console-module button {
+    width: auto;
+    background: var(--violet-dark);
+    color: white;
+    border: 1px solid var(--violet);
+    border-radius: 7px;
+    padding: 9px 13px;
+    cursor: pointer;
+}
+
+.console-module button:hover {
+    background: var(--violet);
+    box-shadow: 0 0 12px rgba(155, 92, 255, 0.35);
+}
+
+.console-module input {
+    max-width: 600px;
+    background: var(--bg-secondary);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 7px;
+}
+
+.console-module .terminal {
+    background: #080611;
+    color: var(--green);
+    border: 1px solid var(--violet-dark);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    overflow-wrap: anywhere;
+    box-shadow: inset 0 0 18px rgba(155, 92, 255, 0.12);
+}
+
+.console-module .comando-permitido {
+    color: var(--green);
+}
+
+.console-module .comando-bloqueado {
+    color: var(--red);
+    font-weight: bold;
+}
+
+.console-module #respuesta-consola {
+    white-space: pre-wrap;
+}
+
+/* CONFIGURACIONES POR FABRICANTE */
+
+.config-module {
+    width: 100%;
+    color: var(--text-main);
+}
+
+.config-module h1 {
+    color: var(--violet-light);
+    margin-bottom: 8px;
+}
+
+.config-subtitle {
+    color: var(--text-muted);
+    margin-bottom: 24px;
+}
+
+.config-aviso {
+    background: rgba(155, 92, 255, 0.10);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--violet);
+    color: var(--text-main);
+    padding: 18px;
+    border-radius: 10px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.config-module .fabricante {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--violet);
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+}
+
+.fabricante-etiqueta {
+    color: var(--cyan);
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1.5px;
+}
+
+.config-module .fabricante h2 {
+    color: var(--violet-light);
+    margin: 12px 0;
+}
+
+.config-module .fabricante p {
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+.config-module .fabricante h3 {
+    color: var(--text-main);
+    font-size: 15px;
+    margin-top: 22px;
+}
+
+.config-module .comando {
+    display: block;
+    background: #080611;
+    color: var(--green);
+    border: 1px solid var(--border);
+    padding: 15px;
+    border-radius: 8px;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+}
+
+/* POLÍTICAS DE INTELIGENCIA ARTIFICIAL */
+
+.politicas-module {
+    width: 100%;
+    color: var(--text-main);
+}
+
+.politicas-module h1 {
+    color: var(--violet-light);
+    margin-bottom: 8px;
+}
+
+.politicas-subtitle {
+    color: var(--text-muted);
+    margin-bottom: 24px;
+}
+
+.politicas-intro {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--cyan);
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 24px;
+    line-height: 1.6;
+    box-shadow: var(--shadow);
+}
+
+.politicas-intro h2 {
+    color: var(--violet-light);
+    margin-top: 0;
+}
+
+.politicas-intro p {
+    color: var(--text-muted);
+    margin-bottom: 0;
+}
+
+.politicas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 18px;
+}
+
+.politicas-module .politica {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--violet);
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+}
+
+.politicas-module .numero {
+    display: inline-block;
+    background: rgba(155, 92, 255, 0.16);
+    color: var(--violet-light);
+    border: 1px solid var(--border);
+    padding: 7px 11px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.politicas-module .politica h2 {
+    color: var(--text-main);
+    font-size: 18px;
+    margin: 17px 0 10px;
+}
+
+.politicas-module .politica p {
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+.politicas-aviso {
+    background: rgba(255, 173, 92, 0.08);
+    border: 1px solid rgba(255, 173, 92, 0.35);
+    border-left: 4px solid var(--orange);
+    color: var(--text-main);
+    padding: 18px;
+    margin-top: 24px;
+    border-radius: 10px;
+    line-height: 1.6;
+}
+
+/* SUBMENU DE CONFIGURACIONES POR FABRICANTE */
+
+.dashboard-menu-group {
+    width: 100%;
+}
+
+.dashboard-menu-group > .dashboard-menu-button {
+    width: 100%;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.sidebar-arrow {
+    margin-left: auto;
+    transition: transform 0.25s ease;
+}
+
+.dashboard-menu-group.open .sidebar-arrow {
+    transform: rotate(180deg);
+}
+
+.dashboard-submenu {
+    padding: 5px 0 5px 42px;
+}
+
+.dashboard-submenu[hidden] {
+    display: none;
+}
+
+.dashboard-submenu-button {
+    display: block;
+    padding: 10px 12px;
+    margin: 4px 0;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-left: 2px solid var(--violet-dark);
+    border-radius: 0 7px 7px 0;
+    transition: all 0.2s ease;
+}
+
+.dashboard-submenu-button:hover,
+.dashboard-submenu-button.active {
+    color: var(--text-main);
+    background: rgba(155, 92, 255, 0.15);
+    border-left-color: var(--cyan);
+}
+
+/* PRESENTACIÓN CLI - CONFIGURACIONES */
+
+.config-cli {
+    margin: 12px 0;
+    background: #080611;
+    border: 1px solid rgba(155, 92, 255, 0.35);
+    border-left: 3px solid var(--violet);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 14px rgba(155, 92, 255, 0.08);
+}
+
+.config-cli pre {
+    margin: 0;
+    padding: 16px 18px;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.config-cli code {
+    color: var(--cyan);
+    font-family: inherit;
+}
+
+.config-cli code::selection {
+    background: var(--violet-dark);
+    color: white;
+}
+
+/* DISTRIBUCIÓN DE EVENTOS POR SEVERIDAD */
+
+.severity-overview {
+    margin-top: 28px;
+    padding: 28px;
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+}
+
+
+.severity-overview h3 {
+    margin: 0 0 24px;
+    color: var(--violet-light);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+}
+
+.severity-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(160px, 1fr));
+    gap: 18px;
+    width: 100%;
+}
+
+
+.severity-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    min-height: 115px;
+    padding: 20px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+
+.severity-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+}
+
+
+/* COLORES POR NIVEL DE SEVERIDAD */
+
+/* 0 - Emergencia */
+.severity-card.severity-0 {
+    border-left: 4px solid #ff1744;
+}
+
+.severity-card.severity-0 strong {
+    color: #ff1744;
+}
+
+/* 1 - Alerta */
+.severity-card.severity-1 {
+    border-left: 4px solid #ff4569;
+}
+
+.severity-card.severity-1 strong {
+    color: #ff4569;
+}
+
+/* 2 - Crítico */
+.severity-card.severity-2 {
+    border-left: 4px solid #ff557c;
+}
+
+.severity-card.severity-2 strong {
+    color: #ff557c;
+}
+
+/* 3 - Error */
+.severity-card.severity-3 {
+    border-left: 4px solid #ff9b54;
+}
+
+.severity-card.severity-3 strong {
+    color: #ff9b54;
+}
+
+/* 4 - Advertencia */
+.severity-card.severity-4 {
+    border-left: 4px solid #ffd166;
+}
+
+.severity-card.severity-4 strong {
+    color: #ffd166;
+}
+
+/* 5 - Aviso */
+.severity-card.severity-5 {
+    border-left: 4px solid #b8e986;
+}
+
+.severity-card.severity-5 strong {
+    color: #b8e986;
+}
+
+/* 6 - Informativo */
+.severity-card.severity-6 {
+    border-left: 4px solid #39e6f2;
+}
+
+.severity-card.severity-6 strong {
+    color: #39e6f2;
+}
+
+/* 7 - Depuración */
+.severity-card.severity-7 {
+    border-left: 4px solid #bd91ff;
+}
+
+.severity-card.severity-7 strong {
+    color: #bd91ff;
+}
+
+.severity-card span {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.severity-card strong {
+    color: var(--text-main);
+    font-size: 32px;
+    font-weight: 700;
+}
+
+
+/* Adaptación a pantallas pequeñas */
+
+@media (max-width: 900px) {
+    .severity-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .severity-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Botón para consultar el detalle de un incidente */
+.btn-detail {
+    display: inline-block;
+    padding: 8px 14px;
+    color: var(--text-main);
+    background: var(--violet-dark);
+    border: 1px solid var(--violet);
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.btn-detail:hover {
+    background: var(--violet);
+    box-shadow: 0 0 12px rgba(155, 92, 255, 0.35);
+}
+
+/* Asignación y confirmación de responsables */
+.incident-detail-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.incident-detail-card form label {
+    color: var(--violet-light);
+    font-weight: 600;
+}
+
+.incident-detail-card form input {
+    padding: 12px;
+    color: var(--text-main);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    outline: none;
+}
+
+.incident-detail-card form input:focus {
+    border-color: var(--violet);
+    box-shadow: 0 0 10px rgba(155, 92, 255, 0.2);
+}
+
+.incident-detail-card form button {
+    align-self: flex-start;
+    padding: 10px 18px;
+    color: white;
+    background: var(--violet-dark);
+    border: 1px solid var(--violet);
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.incident-detail-card form button:hover {
+    background: var(--violet);
+}
+/* Estado de confirmación del responsable */
+.status-confirmed {
+    color: var(--green);
+    font-weight: 600;
+    padding: 8px 0;
+}
+
+.status-pending {
+    color: var(--orange);
+    font-weight: 600;
+    padding: 8px 0;
+}
+/* Selector de reasignación de responsables */
+.incident-detail-card form select {
+    padding: 12px;
+    color: var(--text-main);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    outline: none;
+    cursor: pointer;
+}
+
+.incident-detail-card form select:focus {
+    border-color: var(--violet);
+    box-shadow: 0 0 10px rgba(155, 92, 255, 0.2);
+}
+
+.incident-detail-card form select option {
+    color: var(--text-main);
+    background: var(--bg-secondary);
+}

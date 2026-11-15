@@ -1,0 +1,37 @@
+
+<div class="politicas-module">
+    <h1>Políticas de inteligencia artificial</h1>
+    <p class="politicas-subtitle">
+        NOC Syslog Inteligente | Seguridad y uso responsable de IA
+    </p>
+
+    <section class="politicas-intro">
+        <h2>Reglas y controles de seguridad</h2>
+        <p>
+            Consulta las políticas definidas para orientar el análisis
+            de eventos Syslog y el uso responsable de las recomendaciones
+            generadas por inteligencia artificial.
+        </p>
+    </section>
+
+    <section class="politicas-grid">
+        {% for politica in politicas %}
+        <article class="politica">
+            <span class="numero">
+                POLÍTICA {{ politica.numero }}
+            </span>
+
+            <h2>{{ politica.titulo }}</h2>
+
+            <p>{{ politica.descripcion }}</p>
+        </article>
+        {% endfor %}
+    </section>
+
+    <section class="politicas-aviso">
+        <strong>IMPORTANTE:</strong>
+        estas políticas son lineamientos definidos para el proyecto.
+        Su publicación en esta pantalla no significa que todos los
+        controles técnicos estén implementados o activos.
+    </section>
+</div>
