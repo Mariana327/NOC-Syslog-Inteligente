@@ -161,13 +161,8 @@ def get_connection():
 
 
 def init_db():
-    DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
-
-    schema_path = BASE_DIR / "schema.sql"
-
-    with sqlite3.connect(DATABASE_PATH) as connection:
-        schema = schema_path.read_text(encoding="utf-8")
-        connection.executescript(schema)
+    from database import initialize_database
+    initialize_database()
 
 
 init_db()
@@ -581,7 +576,7 @@ def submit_incident_resolution(incident_id):
 
 @app.route("/telegram/webhook", methods=["POST"])
 def telegram_webhook():
-    
+
     webhook_secret = os.environ.get("TELEGRAM_WEBHOOK_SECRET")
     received_secret = request.headers.get(
         "X-Telegram-Bot-Api-Secret-Token", ""
