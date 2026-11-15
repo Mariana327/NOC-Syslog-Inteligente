@@ -575,6 +575,7 @@ def submit_incident_resolution(incident_id):
     })
 
 @app.route("/telegram/webhook", methods=["POST"])
+@csrf.exempt
 def telegram_webhook():
 
     webhook_secret = os.environ.get("TELEGRAM_WEBHOOK_SECRET")
