@@ -381,7 +381,13 @@
             <span class="sidebar-icon">⌨</span>
             <span class="sidebar-text">Consola simulada</span>
         </a>
-
+        <a class="dashboard-menu-button"
+           data-view="externo"
+           href="{{ url_for('gestor_ssh') }}"
+           title="Gestor SSH simulado">
+            <span class="sidebar-icon">▣</span>
+            <span class="sidebar-text">Gestor SSH simulado</span>
+        </a>
        
 <div class="dashboard-menu-group" id="menu-configuraciones">
 
@@ -1251,7 +1257,7 @@ document.querySelectorAll(
 });
 </script>
 <script src="{{ url_for('static', filename='js/consola.js') }}"></script>
-
+<script src="{{ url_for('static', filename='js/gestor_ssh.js') }}"></script>
 <script>
 document.getElementById("btn-configuraciones").addEventListener("click", function () {
     const grupo = document.getElementById("menu-configuraciones");

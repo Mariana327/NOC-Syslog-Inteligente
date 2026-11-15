@@ -1507,6 +1507,320 @@ def politicas_ia():
         politicas=politicas,
     )
 
+
+@app.route("/gestor-ssh")
+def gestor_ssh():
+    with get_connection() as connection:
+        hosts = connection.execute(
+            """
+            SELECT *
+            FROM ssh_demo_hosts
+            ORDER BY id DESC
+            """
+        ).fetchall()
+
+        users = connection.execute(
+            """
+            SELECT *
+            FROM ssh_demo_users
+            ORDER BY id
+            """
+        ).fetchall()
+
+        audit = connection.execute(
+            """
+            SELECT
+                ssh_command_audit.*,
+                ssh_demo_hosts.name AS host_name
+            FROM ssh_command_audit
+            LEFT JOIN ssh_demo_hosts
+                ON ssh_command_audit.host_id = ssh_demo_hosts.id
+            ORDER BY ssh_command_audit.id DESC
+            LIMIT 20
+            """
+        ).fetchall()
+
+    return render_template(
+        "gestor_ssh_contenido.html",
+        hosts=hosts,
+        users=users,
+        audit=audit,
+    )
+
+
+@app.route("/api/gestor-ssh/comando", methods=["POST"])
+def validar_comando_ssh():
+    host_id = request.form.get("host_id", "").strip()
+    username = request.form.get("username", "").strip()
+    role = request.form.get("role", "").strip()
+    command = request.form.get("command", "").strip()
+    command_normalized = command.lower()
+
+    if not host_id.isdigit() or not username or not command:
+        return jsonify({
+            "success": False,
+            "result": "Solicitud incompleta."
+        }), 400
+
+    if len(command) > 120:
+        return jsonify({
+            "success": False,
+            "result": "El comando supera la longitud permitida."
+        }), 400
+
+    comandos_permitidos = {
+        # Cisco
+        "show version",
+        "show ip interface brief",
+        "show logging",
+        "show inventory",
+        "show interfaces status",
+        "show ip route",
+
+        # Fortinet
+        "get system status",
+        "get system interface physical",
+        "get router info routing-table all",
+        "diagnose hardware deviceinfo",
+
+        # Huawei
+        "display version",
+        "display ip interface brief",
+        "display ip routing-table",
+        "display logbuffer",
+        "display device"
+    }
+
+    comandos_bloqueados = {
+        "configure terminal",
+        "reload",
+        "write erase",
+        "shutdown",
+        "erase startup-config",
+        "reboot",
+        "delete"
+    }
+
+    with get_connection() as connection:
+        user = connection.execute(
+            """
+            SELECT username, role
+            FROM ssh_demo_users
+            WHERE username = ?
+            """,
+            (username,)
+        ).fetchone()
+
+        host = connection.execute(
+            """
+            SELECT id, name, manufacturer, status
+            FROM ssh_demo_hosts
+            WHERE id = ?
+            """,
+            (int(host_id),)
+        ).fetchone()
+
+        if not user or user["role"] != role:
+            return jsonify({
+                "success": False,
+                "result": "Perfil de demostración no válido."
+            }), 403
+
+        if not host or host["status"] != "disponible":
+            return jsonify({
+                "success": False,
+                "result": "Equipo no disponible para la simulación."
+            }), 404
+
+       
+
+        if command_normalized in comandos_permitidos:
+            validation_status = "permitido_simulado"
+
+            respuestas_cisco = {
+                "show version": (
+                    "Cisco IOS Software, Version 15.7(3)M\n"
+                    "Cisco IOS Software, Router Software\n"
+                    "System image file: flash:c2900-universalk9-mz\n"
+                    "Device: Cisco ISR Router\n"
+                    "Uptime: 12 days, 4 hours\n"
+                    "Hardware: ISR 2900 Series"
+                ),
+                "show ip interface brief": (
+                    "Interface              IP-Address      Status\n"
+                    "GigabitEthernet0/0     192.168.50.1    up\n"
+                    "GigabitEthernet0/1     10.0.0.1        up\n"
+                    "Serial0/0/0            unassigned      down"
+                ),
+                "show logging": (
+                    "Syslog logging: enabled\n"
+                    "Console logging: level informational\n"
+                    "Buffer logging: level debugging\n"
+                    "%LINK-3-UPDOWN: Interface GigabitEthernet0/0, up\n"
+                    "%SYS-5-CONFIG_I: Configured from console"
+                ),
+                "show inventory": (
+                    "NAME: Router-Core-01\n"
+                    "DESCR: Cisco Integrated Services Router\n"
+                    "PID: CISCO2901\n"
+                    "VID: V05\n"
+                    "SN: DEMO-CISCO-001"
+                ),
+                "show interfaces status": (
+                    "Port       Name       Status       VLAN\n"
+                    "Gi0/0      WAN        connected    1\n"
+                    "Gi0/1      LAN        connected    10\n"
+                    "Gi0/2      Backup     notconnect   1"
+                ),
+                "show ip route": (
+                    "Codes: C - connected, S - static\n"
+                    "C 192.168.50.0/24 is directly connected\n"
+                    "S 0.0.0.0/0 via 192.168.50.254\n"
+                    "C 10.0.0.0/24 is directly connected"
+                )
+            }
+
+            respuestas_fortinet = {
+                "get system status": (
+                    "Version: FortiGate-VM64 v7.2.8\n"
+                    "Build: 1639\n"
+                    "Hostname: Firewall-Perimetral-01\n"
+                    "Operation Mode: NAT\n"
+                    "System Uptime: 8 days, 6 hours"
+                ),
+                "get system interface physical": (
+                    "Interface       IP Address          Status\n"
+                    "port1           192.168.50.2/24     up\n"
+                    "port2           10.0.0.1/24         up\n"
+                    "port3           0.0.0.0/0           down"
+                ),
+                "get router info routing-table all": (
+                    "Routing table for VRF=0\n"
+                    "S* 0.0.0.0/0 via 192.168.50.254\n"
+                    "C  192.168.50.0/24 is directly connected, port1\n"
+                    "C  10.0.0.0/24 is directly connected, port2"
+                ),
+                "diagnose hardware deviceinfo": (
+                    "Model: FortiGate-VM64\n"
+                    "CPU: 4 virtual CPUs\n"
+                    "Memory: 4096 MB\n"
+                    "Serial Number: DEMO-FORTINET-001"
+                )
+            }
+
+            respuestas_huawei = {
+                "display version": (
+                    "Huawei Versatile Routing Platform Software\n"
+                    "VRP (R) software, Version 8.180\n"
+                    "Device: Switch-Acceso-01\n"
+                    "Uptime: 15 days, 3 hours\n"
+                    "Hardware: S5700 Series\n"
+                    "Serial Number: DEMO-HUAWEI-001"
+                ),
+                "display ip interface brief": (
+                    "Interface             IP Address/Mask     Physical\n"
+                    "Vlanif10              192.168.50.3/24     up\n"
+                    "GigabitEthernet0/0/1  10.0.0.1/24         up\n"
+                    "GigabitEthernet0/0/2  unassigned          down"
+                ),
+                "display ip routing-table": (
+                    "Destination/Mask      Proto  NextHop\n"
+                    "0.0.0.0/0             Static 192.168.50.254\n"
+                    "192.168.50.0/24       Direct 192.168.50.3\n"
+                    "10.0.0.0/24           Direct 10.0.0.1"
+                ),
+                "display logbuffer": (
+                    "Log buffer: enabled\n"
+                    "Info: Interface GigabitEthernet0/0/1 changed to up\n"
+                    "Info: User admin_noc logged in\n"
+                    "Warning: Configuration backup recommended"
+                ),
+                "display device": (
+                    "Slot 1: S5700 Series Switch\n"
+                    "Status: Normal\n"
+                    "CPU: 4 cores\n"
+                    "Memory: 4096 MB"
+                )
+            }
+
+            fabricante = host["manufacturer"].lower()
+
+            if fabricante == "cisco":
+                output = respuestas_cisco.get(
+                    command_normalized,
+                    "Respuesta Cisco no disponible para este comando."
+                )
+
+            elif fabricante == "fortinet":
+                output = respuestas_fortinet.get(
+                    command_normalized,
+                    "Respuesta Fortinet no disponible para este comando."
+                )
+
+            elif fabricante == "huawei":
+                output = respuestas_huawei.get(
+                    command_normalized,
+                    "Respuesta Huawei no disponible para este comando."
+                )
+
+            else:
+                output = (
+                    f"Perfil CLI de {host['manufacturer']} "
+                    "no implementado."
+                )
+
+            result = (
+                f"[SIMULACIÓN CLI - SIN CONEXIÓN REAL]\n"
+                f"{host['name']}> {command_normalized}\n\n"
+                f"{output}\n\n"
+                f"{host['name']}>"
+            )
+
+        elif command_normalized in comandos_bloqueados:
+            validation_status = "bloqueado"
+            result = (
+                "COMANDO BLOQUEADO\n"
+                "La operación puede modificar o interrumpir "
+                "el funcionamiento del dispositivo."
+            )
+
+        else:
+            validation_status = "bloqueado"
+            result = (
+                "COMANDO NO AUTORIZADO\n"
+                "El comando no está incluido en la lista permitida."
+            )
+
+        connection.execute(
+            """
+            INSERT INTO ssh_command_audit (
+                host_id,
+                username,
+                role,
+                command,
+                result,
+                validation_status,
+                approval_status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                host["id"],
+                user["username"],
+                user["role"],
+                command_normalized,
+                result,
+                validation_status,
+                "no_requerida"
+            )
+        )
+
+    return jsonify({
+        "success": validation_status == "permitido_simulado",
+        "validation_status": validation_status,
+        "result": result
+    })
+
 if __name__ == "__main__":
     if not DATABASE_PATH.exists():
         raise FileNotFoundError(

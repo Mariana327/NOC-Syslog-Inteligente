@@ -1,0 +1,170 @@
+
+<div class="ssh-manager">
+    <h1>Gestor SSH simulado</h1>
+    <p>NOC Syslog Inteligente | Entorno de demostración</p>
+
+    <div class="ssh-warning">
+        <strong>MODO 100 % SIMULADO:</strong>
+        No se establecen conexiones SSH reales ni se ejecutan comandos
+        sobre dispositivos físicos. Los equipos, usuarios y resultados
+        son ficticios y se utilizan exclusivamente para demostración.
+    </div>
+
+
+<section class="ssh-panel">
+    <h2>Terminal SSH de demostración</h2>
+
+    <form id="ssh-command-form"
+          action="{{ url_for('validar_comando_ssh') }}"
+          method="POST">
+
+        <input type="hidden"
+               name="csrf_token"
+               value="{{ csrf_token() }}">
+
+        <label for="ssh-host">Equipo:</label>
+        <select id="ssh-host" name="host_id" required>
+            <option value="">Selecciona un equipo</option>
+            {% for host in hosts %}
+                {% if host["status"] == "disponible" %}
+                <option value="{{ host['id'] }}">
+                    {{ host["name"] }} - {{ host["manufacturer"] }}
+                </option>
+                {% endif %}
+            {% endfor %}
+        </select>
+
+        <label for="ssh-user">Usuario:</label>
+        <select id="ssh-user" name="username" required>
+            <option value="">Selecciona un usuario</option>
+            {% for user in users %}
+                <option value="{{ user['username'] }}">
+                    {{ user["username"] }} - {{ user["role"] }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="ssh-role">Perfil:</label>
+        <select id="ssh-role" name="role" required>
+            <option value="">Selecciona un perfil</option>
+            <option value="administrador">Administrador</option>
+            <option value="operador">Operador</option>
+            <option value="observador">Observador</option>
+        </select>
+
+        <label for="ssh-command">Comando:</label>
+        <input
+            type="text"
+            id="ssh-command"
+            name="command"
+            placeholder="Ejemplo: show version"
+            maxlength="120"
+            required
+        >
+
+        <button type="submit" class="ejecutar">
+            Validar comando
+        </button>
+    </form>
+
+    <div id="ssh-terminal-result" class="ssh-terminal-output" aria-live="polite">
+         aria-live="polite">
+        Esperando un comando de demostración...
+    </div>
+</section>
+
+    <section class="ssh-panel">
+        <h2>Inventario de equipos autorizados</h2>
+
+        {% if hosts %}
+            <div class="ssh-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Equipo</th>
+                            <th>Dirección IP</th>
+                            <th>Fabricante</th>
+                            <th>Tipo</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for host in hosts %}
+                        <tr>
+                            <td>{{ host["name"] }}</td>
+                            <td>{{ host["ip_address"] }}</td>
+                            <td>{{ host["manufacturer"] }}</td>
+                            <td>{{ host["device_type"] }}</td>
+                            <td>{{ host["status"] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No hay equipos de demostración registrados todavía.</p>
+        {% endif %}
+    </section>
+
+    <section class="ssh-panel">
+        <h2>Perfiles de usuario simulados</h2>
+
+        {% if users %}
+            <div class="ssh-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Rol</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user["username"] }}</td>
+                            <td>{{ user["role"] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No hay perfiles de demostración registrados todavía.</p>
+        {% endif %}
+    </section>
+
+    <section class="ssh-panel">
+        <h2>Auditoría de comandos</h2>
+
+        {% if audit %}
+            <div class="ssh-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Usuario</th>
+                            <th>Equipo</th>
+                            <th>Comando</th>
+                            <th>Validación</th>
+                            <th>Autorización</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in audit %}
+                        <tr>
+                            <td>{{ item["executed_at"] }}</td>
+                            <td>{{ item["username"] }}</td>
+                            <td>{{ item["host_name"] or "No disponible" }}</td>
+                            <td><code>{{ item["command"] }}</code></td>
+                            <td>{{ item["validation_status"] }}</td>
+                            <td>{{ item["approval_status"] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>Aún no hay comandos registrados en la auditoría.</p>
+        {% endif %}
+    </section>
+</div>
