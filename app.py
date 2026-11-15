@@ -3,6 +3,7 @@ import secrets
 import ipaddress
 import sqlite3
 import requests
+import hmac
 from pathlib import Path
 from datetime import datetime
 
@@ -25,6 +26,8 @@ def send_telegram_alert(source_ip, severity, message, event_id):
 
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+
+    print("Token disponible:", bool(bot_token), "| Chat ID disponible:", bool(chat_id))
 
     if not bot_token or not chat_id:
         print("Telegram no está configurado.")
@@ -74,6 +77,80 @@ def send_telegram_alert(source_ip, severity, message, event_id):
     except requests.RequestException as error:
         print(f"Error al enviar alerta a Telegram: {error}")
         return False
+
+def send_telegram_resolution_request(
+    incident_id,
+    title,
+    source_ip,
+    severity,
+    responsible,
+    cause,
+    diagnosis,
+    corrective_action,
+    verification_result,
+    approval_token,
+):
+    """Envía a Telegram una solicitud de aprobación de resolución."""
+
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+
+    if not bot_token or not chat_id:
+        print("Telegram no está configurado para resoluciones.")
+        return None
+
+    text = (
+        "📋 SOLICITUD DE RESOLUCIÓN - NOC\n\n"
+        f"Incidente: #{incident_id}\n"
+        f"Título: {title}\n"
+        f"IP de origen: {source_ip or 'No disponible'}\n"
+        f"Severidad: {severity}\n"
+        f"Responsable: {responsible}\n\n"
+        f"CAUSA IDENTIFICADA:\n{cause}\n\n"
+        f"DIAGNÓSTICO:\n{diagnosis}\n\n"
+        f"ACCIÓN CORRECTIVA:\n{corrective_action}\n\n"
+        f"VERIFICACIÓN:\n{verification_result}\n\n"
+        "Revisa el registro antes de autorizar la resolución."
+    )
+
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+
+    try:
+        response = requests.post(
+            url,
+            json={
+                "chat_id": chat_id,
+                "text": text,
+                "reply_markup": {
+                    "inline_keyboard": [[
+                        {
+                            "text": "Autorizar como resuelto",
+                            "callback_data": (
+                                f"approve_resolution|{incident_id}|{approval_token}"
+                            ),
+                        }
+                    ]]
+                },
+            },
+            timeout=10,
+        )
+
+        response.raise_for_status()
+        result = response.json()
+
+        if result.get("ok"):
+            print(
+                f"Solicitud de resolución enviada para el incidente #{incident_id}."
+            )
+            return result["result"]["message_id"]
+
+        print("Telegram no confirmó el envío de la resolución.")
+        return None
+
+    except requests.RequestException as error:
+        print(f"Error al enviar solicitud de resolución: {error}")
+        return None
+    
 def get_connection():
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
 
@@ -173,6 +250,41 @@ def receive_syslog():
 
         event_id = cursor.lastrowid
 
+        incident_id = None
+
+        if severity in (0, 1, 2):
+
+            if severity in (0, 1):
+                suggested_responsible = "Administrador NOC"
+            else:
+                suggested_responsible = "Analista de redes"
+
+            incident_cursor = connection.execute(
+                """
+                INSERT INTO incidents (
+                    title,
+                    description,
+                    severity,
+                    status,
+                    source_ip,
+                    syslog_event_id,
+                    assigned_to,
+                    responsible_confirmed
+                )
+                VALUES (?, ?, ?, 'abierto', ?, ?, ?, 0)
+                """,
+                (
+                    f"Incidente automático - Severidad {severity}",
+                    message,
+                    severity,
+                    source_ip,
+                    event_id,
+                    suggested_responsible,
+                ),
+            )
+
+            incident_id = incident_cursor.lastrowid
+
     send_telegram_alert(
         source_ip,
         severity,
@@ -185,6 +297,8 @@ def receive_syslog():
         "message": "Evento Syslog registrado",
         "event_id": event_id,
         "severity": severity,
+        "incident_created": incident_id is not None,
+        "incident_id": incident_id,
     }), 201
 
 
@@ -244,6 +358,39 @@ def generate_demo_events():
                     raw_message,
                 ),
             )
+
+            event_id = cursor.lastrowid
+
+            if severity in (0, 1, 2):
+
+                if severity in (0, 1):
+                    suggested_responsible = "Administrador NOC"
+                else:
+                    suggested_responsible = "Analista de redes"
+
+                connection.execute(
+                    """
+                    INSERT INTO incidents (
+                        title,
+                        description,
+                        severity,
+                        status,
+                        source_ip,
+                        syslog_event_id,
+                        assigned_to,
+                        responsible_confirmed
+                    )
+                    VALUES (?, ?, ?, 'abierto', ?, ?, ?, 0)
+                    """,
+                    (
+                        f"Incidente automático simulado - Severidad {severity}",
+                        simulated_message,
+                        severity,
+                        source_ip,
+                        event_id,
+                        suggested_responsible,
+                    ),
+                )
 
             created_events.append(
                 (cursor.lastrowid, severity, simulated_message)
@@ -310,6 +457,352 @@ def validate_device_form():
         return None, "El estado seleccionado no es válido."
 
     return device, None
+
+@app.route("/incidents/<int:incident_id>")
+def incident_detail(incident_id):
+    with get_connection() as connection:
+        incident = connection.execute(
+            "SELECT * FROM incidents WHERE id = ?",
+            (incident_id,),
+        ).fetchone()
+
+    if incident is None:
+        flash("El incidente solicitado no existe.", "error")
+        return redirect(url_for("home") + "#seccion-incidentes")
+
+    status_messages = {
+        "abierto": "Incidente registrado. Está pendiente de revisión y asignación de acciones.",
+        "en_progreso": "El incidente está siendo atendido. Se debe continuar con el diagnóstico y la solución.",
+        "resuelto": "Se ha registrado una solución. Se recomienda verificar que el servicio funcione correctamente.",
+        "cerrado": "La gestión del incidente ha finalizado. El caso queda disponible para consulta.",
+    }
+
+    return render_template(
+        "incidente_detalle.html",
+        incident=incident,
+        status_message=status_messages.get(incident["status"], ""),
+    )
+
+@app.route(
+    "/incidents/<int:incident_id>/resolution",
+    methods=["POST"]
+)
+def submit_incident_resolution(incident_id):
+
+    cause = request.form.get("resolution_cause", "").strip()
+    diagnosis = request.form.get("resolution_diagnosis", "").strip()
+    corrective_action = request.form.get("corrective_action", "").strip()
+    verification_result = request.form.get("verification_result", "").strip()
+
+    fields = [
+        cause,
+        diagnosis,
+        corrective_action,
+        verification_result,
+    ]
+
+    if not all(fields):
+        return jsonify({
+            "success": False,
+            "message": "Completa todos los campos del registro."
+        }), 400
+
+    with get_connection() as connection:
+        incident = connection.execute(
+            """
+            SELECT *
+            FROM incidents
+            WHERE id = ?
+            """,
+            (incident_id,),
+        ).fetchone()
+
+        if incident is None:
+            return jsonify({
+                "success": False,
+                "message": "El incidente no existe."
+            }), 404
+
+        if (
+            incident["status"] != "en_progreso"
+            or incident["responsible_confirmed"] != 1
+        ):
+            return jsonify({
+                "success": False,
+                "message": "El incidente debe tener un responsable confirmado y estar en progreso."
+            }), 400
+
+        approval_token = secrets.token_hex(12)
+
+        connection.execute(
+            """
+            UPDATE incidents
+            SET resolution_cause = ?,
+                resolution_diagnosis = ?,
+                corrective_action = ?,
+                verification_result = ?,
+                resolution_submitted_at = CURRENT_TIMESTAMP,
+                resolution_approval_token = ?
+            WHERE id = ?
+            """,
+            (
+                cause,
+                diagnosis,
+                corrective_action,
+                verification_result,
+                approval_token,
+                incident_id,
+            ),
+        )
+
+    message_id = send_telegram_resolution_request(
+        incident_id=incident_id,
+        title=incident["title"],
+        source_ip=incident["source_ip"],
+        severity=incident["severity"],
+        responsible=incident["assigned_to"],
+        cause=cause,
+        diagnosis=diagnosis,
+        corrective_action=corrective_action,
+        verification_result=verification_result,
+        approval_token=approval_token,
+    )
+
+    if message_id is None:
+        return jsonify({
+            "success": False,
+            "message": "No se pudo enviar la solicitud a Telegram. El registro quedó guardado; puedes intentar enviarlo nuevamente."
+        }), 502
+
+    return jsonify({
+        "success": True,
+        "message": "Registro guardado y enviado a Telegram para tu autorización."
+    })
+
+@app.route("/telegram/webhook", methods=["POST"])
+def telegram_webhook():
+    
+    webhook_secret = os.environ.get("TELEGRAM_WEBHOOK_SECRET")
+    received_secret = request.headers.get(
+        "X-Telegram-Bot-Api-Secret-Token", ""
+    )
+
+    if (
+        not webhook_secret
+        or not hmac.compare_digest(received_secret, webhook_secret)
+    ):
+        return jsonify({"ok": False}), 403
+    authorized_user_id = os.environ.get("TELEGRAM_AUTHORIZED_USER_ID")
+
+    if not authorized_user_id:
+        return jsonify({"ok": False}), 500
+
+    update = request.get_json(silent=True) or {}
+    callback = update.get("callback_query")
+
+    if not callback:
+        return jsonify({"ok": True})
+
+    telegram_user_id = str(
+        callback.get("from", {}).get("id", "")
+    )
+
+    callback_id = callback.get("id")
+    callback_data = callback.get("data", "")
+
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+
+    if telegram_user_id != authorized_user_id:
+        requests.post(
+            f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery",
+            json={
+                "callback_query_id": callback_id,
+                "text": "No tienes autorización para aprobar.",
+                "show_alert": True,
+            },
+            timeout=5,
+        )
+        return jsonify({"ok": True})
+
+    parts = callback_data.split("|")
+
+    if len(parts) != 3 or parts[0] != "approve_resolution":
+        return jsonify({"ok": True})
+
+    incident_id = parts[1]
+    approval_token = parts[2]
+
+    with get_connection() as connection:
+        cursor = connection.execute(
+            """
+            UPDATE incidents
+            SET status = 'resuelto',
+                resolved_at = CURRENT_TIMESTAMP,
+                resolution_approved_at = CURRENT_TIMESTAMP,
+                resolution_approved_by = ?,
+                resolution_approval_token = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+              AND status = 'en_progreso'
+              AND resolution_approval_token = ?
+            """,
+            (
+                telegram_user_id,
+                incident_id,
+                approval_token,
+            ),
+        )
+
+    if cursor.rowcount == 1:
+        callback_message = "Resolución autorizada. Incidente marcado como resuelto."
+    else:
+        callback_message = "La solicitud no es válida o ya fue procesada."
+
+    requests.post(
+        f"https://api.telegram.org/bot{bot_token}/answerCallbackQuery",
+        json={
+            "callback_query_id": callback_id,
+            "text": callback_message,
+            "show_alert": True,
+        },
+        timeout=5,
+    )
+
+    return jsonify({"ok": True})
+
+@app.route("/incidents/<int:incident_id>/responsible", methods=["POST"])
+def confirm_incident_responsible(incident_id):
+
+    with get_connection() as connection:
+        cursor = connection.execute(
+            """
+            UPDATE incidents
+            SET responsible_confirmed = 1,
+                status = 'en_progreso',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+              AND assigned_to IS NOT NULL
+              AND assigned_to != ''
+            """,
+            (incident_id,),
+        )
+
+        if cursor.rowcount == 0:
+            flash(
+                "No se pudo confirmar el responsable. "
+                "Verifica que el incidente tenga una asignación.",
+                "error",
+            )
+            return redirect(
+    url_for("incident_detail", incident_id=incident_id)
+    + "#asignacion-responsable")
+
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+         with get_connection() as connection:
+            incident = connection.execute(
+                """
+                SELECT assigned_to, status, responsible_confirmed
+                FROM incidents
+                WHERE id = ?
+                """,
+                (incident_id,),
+            ).fetchone()
+
+        return jsonify({
+            "success": True,
+            "assigned_to": incident["assigned_to"],
+            "status": incident["status"],
+            "responsible_confirmed": incident["responsible_confirmed"],
+            "message": "Responsable confirmado. El incidente está en progreso.",
+        })
+
+    flash(
+        "Responsable confirmado correctamente. "
+        "El incidente ahora está en progreso.",
+        "success",
+    )
+
+    return redirect(
+        url_for("incident_detail", incident_id=incident_id)
+        + "#asignacion-responsable"
+    )
+
+@app.route("/incidents/<int:incident_id>/reassign", methods=["POST"])
+def reassign_incident_responsible(incident_id):
+    responsible = request.form.get("assigned_to", "").strip()
+
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+    allowed_responsibles = [
+        "Administrador NOC",
+        "Analista de redes",
+        "Técnico de infraestructura",
+        "Técnico de redes",
+    ]
+
+    if responsible not in allowed_responsibles:
+        if is_ajax:
+            return jsonify({
+                "success": False,
+                "message": "Selecciona un responsable válido.",
+            }), 400
+
+        flash("Selecciona un responsable válido.", "error")
+        return redirect(url_for(
+            "incident_detail",
+            incident_id=incident_id
+        ))
+
+    with get_connection() as connection:
+        cursor = connection.execute(
+            """
+            UPDATE incidents
+            SET assigned_to = ?,
+                responsible_confirmed = 0,
+                status = 'abierto',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+            """,
+            (responsible, incident_id),
+        )
+
+        if cursor.rowcount == 0:
+            if is_ajax:
+                return jsonify({
+                    "success": False,
+                    "message": "El incidente no existe.",
+                }), 404
+
+            flash("El incidente no existe.", "error")
+            return redirect(url_for("home") + "#seccion-incidentes")
+
+        incident = connection.execute(
+            """
+            SELECT assigned_to, status, responsible_confirmed
+            FROM incidents
+            WHERE id = ?
+            """,
+            (incident_id,),
+        ).fetchone()
+
+    if is_ajax:
+        return jsonify({
+            "success": True,
+            "assigned_to": incident["assigned_to"],
+            "status": incident["status"],
+            "responsible_confirmed": incident["responsible_confirmed"],
+            "message": "Nuevo responsable asignado. Pendiente de confirmación.",
+        })
+
+    flash(
+        "Nuevo responsable asignado. Está pendiente de confirmación.",
+        "success",
+    )
+
+    return redirect(
+        url_for("incident_detail", incident_id=incident_id)
+        + "#asignacion-responsable"
+    )
 
 @app.route("/incidents/<int:incident_id>/status", methods=["POST"])
 def update_incident_status(incident_id):
@@ -484,6 +977,8 @@ def home():
             query, params
         ).fetchall()
 
+        
+
         event_stats = connection.execute(
             """
             SELECT
@@ -493,7 +988,15 @@ def home():
                 SUM(CASE WHEN severity = 3 THEN 1 ELSE 0 END)
                     AS errors,
                 SUM(CASE WHEN severity BETWEEN 4 AND 7 THEN 1 ELSE 0 END)
-                    AS other_events
+                    AS other_events,
+                SUM(CASE WHEN severity = 0 THEN 1 ELSE 0 END) AS severity_0,
+                SUM(CASE WHEN severity = 1 THEN 1 ELSE 0 END) AS severity_1,
+                SUM(CASE WHEN severity = 2 THEN 1 ELSE 0 END) AS severity_2,
+                SUM(CASE WHEN severity = 3 THEN 1 ELSE 0 END) AS severity_3,
+                SUM(CASE WHEN severity = 4 THEN 1 ELSE 0 END) AS severity_4,
+                SUM(CASE WHEN severity = 5 THEN 1 ELSE 0 END) AS severity_5,
+                SUM(CASE WHEN severity = 6 THEN 1 ELSE 0 END) AS severity_6,
+                SUM(CASE WHEN severity = 7 THEN 1 ELSE 0 END) AS severity_7
             FROM syslog_events
             """
         ).fetchone()
@@ -644,30 +1147,270 @@ def consola_simulada():
             "descripcion": "Consultar registros del sistema",
         },
     ]
+    if request.args.get("embedded") == "1":
+        return render_template("consola_contenido.html", comandos=comandos)
+
     return render_template("consola.html", comandos=comandos)
 
 
 @app.route("/configuraciones")
 def configuraciones():
     fabricantes = {
-        "Cisco": {
-            "descripcion": "Ejemplo de consulta de Syslog para equipos Cisco.",
-            "comando": "show logging",
-        },
-        "Fortinet": {
-            "descripcion": "Ejemplo de consulta de registros en FortiGate.",
-            "comando": "get log syslogd setting",
-        },
-        "Huawei": {
-            "descripcion": "Ejemplo de consulta de información de registros.",
-            "comando": "display logbuffer",
-        },
+    "Cisco": {
+        "descripcion": "Comandos de administración, supervisión y diagnóstico para routers y switches Cisco.",
+        "categorias": [
+            {
+                "nombre": "Información general",
+                "comandos": [
+                    {
+                        "nombre": "Versión del sistema",
+                        "comando": "show version",
+                        "descripcion": "Consulta la versión del IOS, modelo, tiempo de actividad y memoria."
+                    },
+                    {
+                        "nombre": "Configuración activa",
+                        "comando": "show running-config",
+                        "descripcion": "Muestra la configuración que está ejecutándose actualmente."
+                    },
+                    {
+                        "nombre": "Inventario de hardware",
+                        "comando": "show inventory",
+                        "descripcion": "Consulta los componentes y módulos instalados."
+                    }
+                ]
+            },
+            {
+                "nombre": "Interfaces y conectividad",
+                "comandos": [
+                    {
+                        "nombre": "Resumen de interfaces IP",
+                        "comando": "show ip interface brief",
+                        "descripcion": "Muestra las direcciones IP y el estado de las interfaces."
+                    },
+                    {
+                        "nombre": "Detalle de interfaces",
+                        "comando": "show interfaces",
+                        "descripcion": "Consulta estadísticas, errores y estado de las interfaces."
+                    },
+                    {
+                        "nombre": "Tabla ARP",
+                        "comando": "show ip arp",
+                        "descripcion": "Muestra las asociaciones entre direcciones IP y MAC."
+                    }
+                ]
+            },
+            {
+                "nombre": "Enrutamiento y VLAN",
+                "comandos": [
+                    {
+                        "nombre": "Tabla de rutas",
+                        "comando": "show ip route",
+                        "descripcion": "Muestra las rutas conocidas por el dispositivo."
+                    },
+                    {
+                        "nombre": "Resumen de VLAN",
+                        "comando": "show vlan brief",
+                        "descripcion": "Consulta las VLAN configuradas y sus puertos asociados."
+                    },
+                    {
+                        "nombre": "Vecinos OSPF",
+                        "comando": "show ip ospf neighbor",
+                        "descripcion": "Muestra los vecinos detectados mediante OSPF."
+                    }
+                ]
+            },
+            {
+                "nombre": "Registros y Syslog",
+                "comandos": [
+                    {
+                        "nombre": "Registros del sistema",
+                        "comando": "show logging",
+                        "descripcion": "Consulta los mensajes de registro almacenados."
+                    },
+                    {
+                        "nombre": "Configuración Syslog",
+                        "comando": "show running-config | include logging",
+                        "descripcion": "Consulta las líneas de configuración relacionadas con logging."
+                    }
+                ]
+            }
+        ]
+    },
+
+    "Fortinet": {
+        "descripcion": "Comandos de administración y diagnóstico para dispositivos FortiGate.",
+        "categorias": [
+            {
+                "nombre": "Información general",
+                "comandos": [
+                    {
+                        "nombre": "Información del sistema",
+                        "comando": "get system status",
+                        "descripcion": "Consulta versión de FortiOS, modelo y tiempo de actividad."
+                    },
+                    {
+                        "nombre": "Información de hardware",
+                        "comando": "get hardware status",
+                        "descripcion": "Consulta información del hardware del dispositivo."
+                    }
+                ]
+            },
+            {
+                "nombre": "Interfaces y conectividad",
+                "comandos": [
+                    {
+                        "nombre": "Configuración de interfaces",
+                        "comando": "show system interface",
+                        "descripcion": "Muestra la configuración de las interfaces de red."
+                    },
+                    {
+                        "nombre": "Estado de interfaces",
+                        "comando": "diagnose netlink interface list",
+                        "descripcion": "Consulta información y estado de las interfaces."
+                    },
+                    {
+                        "nombre": "Tabla ARP",
+                        "comando": "get system arp",
+                        "descripcion": "Muestra las asociaciones ARP conocidas."
+                    }
+                ]
+            },
+            {
+                "nombre": "Enrutamiento y seguridad",
+                "comandos": [
+                    {
+                        "nombre": "Tabla de rutas",
+                        "comando": "get router info routing-table all",
+                        "descripcion": "Consulta las rutas disponibles en el dispositivo."
+                    },
+                    {
+                        "nombre": "Políticas de firewall",
+                        "comando": "show firewall policy",
+                        "descripcion": "Muestra las políticas de firewall configuradas."
+                    },
+                    {
+                        "nombre": "Sesiones activas",
+                        "comando": "diagnose sys session list",
+                        "descripcion": "Consulta las sesiones de tráfico activas."
+                    }
+                ]
+            },
+            {
+                "nombre": "Registros y Syslog",
+                "comandos": [
+                    {
+                        "nombre": "Configuración Syslog",
+                        "comando": "show log syslogd setting",
+                        "descripcion": "Consulta los parámetros de configuración del envío Syslog."
+                    },
+                    {
+                        "nombre": "Configuración de registro",
+                        "comando": "get log syslogd setting",
+                        "descripcion": "Muestra los parámetros actuales del servicio Syslog."
+                    }
+                ]
+            }
+        ]
+    },
+
+    "Huawei": {
+        "descripcion": "Comandos de administración y diagnóstico para routers y switches Huawei VRP.",
+        "categorias": [
+            {
+                "nombre": "Información general",
+                "comandos": [
+                    {
+                        "nombre": "Versión del sistema",
+                        "comando": "display version",
+                        "descripcion": "Consulta la versión del software y el modelo del equipo."
+                    },
+                    {
+                        "nombre": "Configuración actual",
+                        "comando": "display current-configuration",
+                        "descripcion": "Muestra la configuración activa del dispositivo."
+                    },
+                    {
+                        "nombre": "Estado del equipo",
+                        "comando": "display device",
+                        "descripcion": "Consulta el estado de los componentes del dispositivo."
+                    }
+                ]
+            },
+            {
+                "nombre": "Interfaces y conectividad",
+                "comandos": [
+                    {
+                        "nombre": "Resumen de interfaces IP",
+                        "comando": "display ip interface brief",
+                        "descripcion": "Muestra las direcciones IP y el estado de las interfaces."
+                    },
+                    {
+                        "nombre": "Detalle de interfaces",
+                        "comando": "display interface",
+                        "descripcion": "Consulta estadísticas y estado de las interfaces."
+                    },
+                    {
+                        "nombre": "Tabla ARP",
+                        "comando": "display arp",
+                        "descripcion": "Muestra las asociaciones entre direcciones IP y MAC."
+                    }
+                ]
+            },
+            {
+                "nombre": "Enrutamiento y VLAN",
+                "comandos": [
+                    {
+                        "nombre": "Tabla de rutas",
+                        "comando": "display ip routing-table",
+                        "descripcion": "Consulta las rutas conocidas por el equipo."
+                    },
+                    {
+                        "nombre": "Resumen de VLAN",
+                        "comando": "display vlan",
+                        "descripcion": "Muestra las VLAN existentes y su información."
+                    },
+                    {
+                        "nombre": "Vecinos OSPF",
+                        "comando": "display ospf peer",
+                        "descripcion": "Consulta los vecinos OSPF detectados."
+                    }
+                ]
+            },
+            {
+                "nombre": "Registros y Syslog",
+                "comandos": [
+                    {
+                        "nombre": "Registros del sistema",
+                        "comando": "display logbuffer",
+                        "descripcion": "Consulta los mensajes almacenados en el búfer de registros."
+                    },
+                    {
+                        "nombre": "Configuración de información",
+                        "comando": "display info-center",
+                        "descripcion": "Consulta la configuración del servicio de información y registros."
+                    }
+                ]
+            }
+        ]
     }
+}
+
+    fabricante_seleccionado = request.args.get("fabricante", "")
+
+    if fabricante_seleccionado not in fabricantes:
+        fabricante_seleccionado = ""
+
+    if request.args.get("embedded") == "1":
+        return render_template(
+            "configuraciones_contenido.html",
+            fabricantes=fabricantes,
+            fabricante_seleccionado=fabricante_seleccionado,
+        )
+
     return render_template(
         "configuraciones.html",
         fabricantes=fabricantes,
     )
-
 
 @app.route("/panel")
 def panel():
@@ -731,7 +1474,11 @@ def politicas_ia():
             ),
         },
     ]
-
+    if request.args.get("embedded") == "1":
+        return render_template(
+            "politicas_ia_contenido.html",
+            politicas=politicas,
+        )
     return render_template(
         "politicas_ia.html",
         politicas=politicas,
