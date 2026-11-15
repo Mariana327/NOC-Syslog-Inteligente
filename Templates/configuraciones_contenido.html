@@ -1,0 +1,77 @@
+
+<div class="config-module">
+
+    <h1>Configuraciones por fabricante</h1>
+
+    <p class="config-subtitle">
+        NOC Syslog Inteligente | Biblioteca de comandos de administración y diagnóstico
+    </p>
+
+    <div class="config-aviso">
+        <strong>IMPORTANTE:</strong>
+        Los comandos se presentan como material de consulta.
+        No se ejecutan ni modifican la configuración de dispositivos reales.
+        Verifica siempre el modelo y la versión del sistema operativo.
+    </div>
+
+    {% for nombre, datos in fabricantes.items() %}
+    {% if not fabricante_seleccionado or nombre == fabricante_seleccionado %}
+
+    <section class="fabricante">
+
+        <div class="fabricante-cabecera">
+            <span class="fabricante-etiqueta">FABRICANTE</span>
+            <h2>{{ nombre }}</h2>
+            <p>{{ datos.descripcion }}</p>
+        </div>
+
+        {% for categoria in datos.categorias %}
+
+        <div class="config-categoria">
+
+            <h3>{{ categoria.nombre }}</h3>
+
+            <div class="config-comandos">
+
+                {% for item in categoria.comandos %}
+
+<article class="config-comando config-cli">
+
+    <pre><code># {{ item.nombre }}
+# {{ item.descripcion }}
+{{ item.comando }}</code></pre>
+
+</article>
+
+                {% endfor %}
+
+            </div>
+        </div>
+
+        {% endfor %}
+
+    </section>
+
+    {% endif %}
+    {% endfor %}
+
+</div>
+
+<script>
+function copiarComando(boton) {
+    const comando = boton.dataset.comando;
+
+    navigator.clipboard.writeText(comando)
+        .then(function () {
+            const textoOriginal = boton.textContent;
+            boton.textContent = "Copiado";
+
+            setTimeout(function () {
+                boton.textContent = textoOriginal;
+            }, 1500);
+        })
+        .catch(function () {
+            alert("No fue posible copiar el comando.");
+        });
+}
+</script>

@@ -1,0 +1,96 @@
+
+<div class="console-module">
+    <h1>Consola simulada</h1>
+    <p>NOC Syslog Inteligente | MVP v0.2.0</p>
+
+    <p class="aviso">
+        <strong>MODO DEMOSTRACIÓN:</strong> consola de solo lectura.
+        No existe conexión con dispositivos reales ni ejecución de comandos
+        de red. Todas las respuestas son ficticias.
+    </p>
+
+    <section class="panel permitido">
+        <h2>Comandos permitidos</h2>
+        <p>Comandos de consulta incluidos en la lista autorizada:</p>
+
+        <ul>
+            <li>
+                <code>show version</code> — Consulta ficticia de la versión.
+                <button type="button" onclick="seleccionar('show version')">
+                    Probar
+                </button>
+            </li>
+            <li>
+                <code>show ip interface brief</code> —
+                Consulta ficticia de las interfaces.
+                <button type="button" onclick="seleccionar('show ip interface brief')">
+                    Probar
+                </button>
+            </li>
+            <li>
+                <code>show logging</code> — Consulta ficticia de los registros.
+                <button type="button" onclick="seleccionar('show logging')">
+                    Probar
+                </button>
+            </li>
+        </ul>
+    </section>
+
+    <section class="panel bloqueado">
+        <h2>Comandos bloqueados</h2>
+        <p>Ejemplos de comandos que no están autorizados:</p>
+
+        <ul>
+            <li>
+                <code>configure terminal</code> — Intenta modificar la configuración.
+                <button type="button" onclick="seleccionar('configure terminal')">
+                    Probar bloqueo
+                </button>
+            </li>
+            <li>
+                <code>reload</code> — Puede reiniciar el dispositivo.
+                <button type="button" onclick="seleccionar('reload')">
+                    Probar bloqueo
+                </button>
+            </li>
+            <li>
+                <code>write erase</code> — Puede borrar la configuración.
+                <button type="button" onclick="seleccionar('write erase')">
+                    Probar bloqueo
+                </button>
+            </li>
+            <li>
+                <code>shutdown</code> — Puede deshabilitar una interfaz.
+                <button type="button" onclick="seleccionar('shutdown')">
+                    Probar bloqueo
+                </button>
+            </li>
+        </ul>
+    </section>
+
+    <section class="panel">
+        <h2>Terminal de demostración</h2>
+        <p>
+            Ingresa un comando de la lista autorizada o prueba uno
+            que deba bloquearse.
+        </p>
+
+        <form id="formulario-consola">
+            <label for="entrada-consola">Comando:</label>
+            <input id="entrada-consola" type="text"
+                   placeholder="Ejemplo: show version"
+                   autocomplete="off" required>
+
+            <button class="ejecutar" type="submit">
+                Validar comando
+            </button>
+        </form>
+
+        <div class="terminal" aria-live="polite">
+            <p id="comando-consola">NOC-SIMULADO&gt; Esperando comando...</p>
+            <p id="respuesta-consola">
+                La consola mostrará aquí el resultado de la validación.
+            </p>
+        </div>
+    </section>
+</div>
