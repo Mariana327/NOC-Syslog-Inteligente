@@ -66,3 +66,48 @@ CREATE INDEX IF NOT EXISTS idx_incidents_severity
 
 CREATE INDEX IF NOT EXISTS idx_incidents_created_at
     ON incidents(created_at);
+
+
+-- ==========================================
+-- GESTOR SSH SIMULADO
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS ssh_demo_hosts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    ip_address TEXT NOT NULL UNIQUE,
+    manufacturer TEXT NOT NULL,
+    device_type TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'disponible'
+        CHECK (status IN ('disponible', 'inactivo', 'mantenimiento')),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ssh_demo_users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    role TEXT NOT NULL
+        CHECK (role IN ('administrador', 'operador', 'observador')),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ssh_command_audit (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    host_id INTEGER,
+    username TEXT NOT NULL,
+    role TEXT NOT NULL,
+    command TEXT NOT NULL,
+    result TEXT,
+    validation_status TEXT NOT NULL,
+    approval_status TEXT NOT NULL DEFAULT 'no_requerida',
+    executed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (host_id)
+        REFERENCES ssh_demo_hosts(id)
+        ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ssh_audit_executed_at
+    ON ssh_command_audit(executed_at);
+
+CREATE INDEX IF NOT EXISTS idx_ssh_audit_host
+    ON ssh_command_audit(host_id);
