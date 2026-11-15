@@ -67,6 +67,34 @@ def initialize_database():
                     f"ADD COLUMN {column_name} {column_type}"
                 )
 
+        # Crear equipos ficticios del Gestor SSH
+        connection.executemany(
+            """
+            INSERT OR IGNORE INTO ssh_demo_hosts
+            (name, ip_address, manufacturer, device_type, status)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            [
+                ("Router-Core-01", "192.168.50.1", "Cisco", "Router", "disponible"),
+                ("Firewall-Perimetral-01", "192.168.50.2", "Fortinet", "Firewall", "disponible"),
+                ("Switch-Acceso-01", "192.168.50.3", "Huawei", "Switch", "disponible"),
+            ]
+        )
+
+        # Crear perfiles de usuario de demostración
+        connection.executemany(
+            """
+            INSERT OR IGNORE INTO ssh_demo_users
+            (username, role)
+            VALUES (?, ?)
+            """,
+            [
+                ("admin_noc", "administrador"),
+                ("operador_noc", "operador"),
+                ("observador_noc", "observador"),
+            ]
+        )
+
         # Confirmar los cambios
         connection.commit()
 
